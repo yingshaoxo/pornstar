@@ -7,7 +7,7 @@ t = Terminal()
 class Tools():
     def compile(self):
         commands = """
-python3 -m nuitka --module pornstar.py --include-package=lib --output-dir=build
+python3 -m nuitka --module pornstar --include-package=pornstar.lib --output-dir=build
         """
         t.run(commands)
 
