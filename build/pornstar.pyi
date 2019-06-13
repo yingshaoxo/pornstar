@@ -10,7 +10,48 @@
 # when you make software releases of the extension module that it
 # describes.
 
-import lib
+import utils
+import distutils.version
+import warnings
+import sys
+import multiprocessing
+import keras.models
+import skimage.transform
+import pycocotools.cocoeval
+import urllib.request
+import keras
+import re
+import tensorflow
+import pycocotools.coco
+import model
+import datetime
+import collections
+import h5py
+import imgaug
+import os
+import matplotlib
+import skimage.io
+import scipy
+import keras.layers
+import argparse
+import keras.utils.data_utils
+import keras.engine
+import numpy
+import time
+import config
+import shutil
+import math
+import pycocotools
+import skimage.color
+import errno
+import random
+import cv2
+import matplotlib.pyplot
+import logging
+import keras.backend
+import coco
+import mrcnn.parallel_model
+import zipfile
 
 # This is not Python source even if it looks so. Make it clear for
 # now. This was decided by PEP 484 designers.
