@@ -10,8 +10,9 @@
 # when you make software releases of the extension module that it
 # describes.
 
-import utils
+import __coco
 import distutils.version
+import __utils
 import warnings
 import sys
 import multiprocessing
@@ -23,33 +24,32 @@ import keras
 import re
 import tensorflow
 import pycocotools.coco
-import model
+import __model
 import datetime
 import collections
 import h5py
 import imgaug
 import os
-import matplotlib
+import auto_everything.base
 import skimage.io
 import scipy
 import keras.layers
+import __main
 import argparse
 import keras.utils.data_utils
 import keras.engine
 import numpy
 import time
-import config
 import shutil
 import math
 import pycocotools
 import skimage.color
 import errno
-import random
 import cv2
-import matplotlib.pyplot
+import random
 import logging
 import keras.backend
-import coco
+import __config
 import mrcnn.parallel_model
 import zipfile
 
