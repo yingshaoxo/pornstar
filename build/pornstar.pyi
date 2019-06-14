@@ -10,8 +10,10 @@
 # when you make software releases of the extension module that it
 # describes.
 
+import PIL
 import __coco
 import distutils.version
+import __PIL_filters
 import __utils
 import warnings
 import sys
@@ -46,10 +48,11 @@ import pycocotools
 import skimage.color
 import errno
 import cv2
+import matplotlib.pyplot
 import random
 import logging
-import keras.backend
 import __config
+import keras.backend
 import mrcnn.parallel_model
 import zipfile
 

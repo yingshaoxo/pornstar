@@ -3471,6 +3471,7 @@ PyObject *CALL_METHOD_WITH_ARGS3( PyObject *source, PyObject *attr_name, PyObjec
  * our own loading for each of these.
  */
 MOD_INIT_DECL( pornstar );
+MOD_INIT_DECL( pornstar$__PIL_filters );
 MOD_INIT_DECL( pornstar$__coco );
 MOD_INIT_DECL( pornstar$__config );
 MOD_INIT_DECL( pornstar$__main );
@@ -3479,6 +3480,7 @@ MOD_INIT_DECL( pornstar$__utils );
 static struct Nuitka_MetaPathBasedLoaderEntry meta_path_loader_entries[] =
 {
     { "pornstar", MOD_INIT_NAME( pornstar ), 0, 0, NUITKA_PACKAGE_FLAG },
+    { "pornstar.__PIL_filters", MOD_INIT_NAME( pornstar$__PIL_filters ), 0, 0, NUITKA_COMPILED_MODULE },
     { "pornstar.__coco", MOD_INIT_NAME( pornstar$__coco ), 0, 0, NUITKA_COMPILED_MODULE },
     { "pornstar.__config", MOD_INIT_NAME( pornstar$__config ), 0, 0, NUITKA_COMPILED_MODULE },
     { "pornstar.__main", MOD_INIT_NAME( pornstar$__main ), 0, 0, NUITKA_COMPILED_MODULE },

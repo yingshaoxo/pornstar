@@ -7,4 +7,5 @@ background = oil_painting_effect(background)
 
 #background = blur_a_frame(background, 25)
 frame = combine_two_frame(person, background)
-display_a_frame(frame)
+#display_a_frame(frame)
+save_a_frame_as_an_img(terminal.fix_path("~/Desktop/girl.png"), ssrame)
