@@ -5,6 +5,10 @@ py = Python()
 t = Terminal()
 
 class Tools():
+    def checklogs(self):
+        path_of_log_file = t.fix_path("~/Pornstar/__main.log")
+        t.run(f"tail -F {path_of_log_file}")
+
     def compile(self):
         commands = """
 python3 -m nuitka --module pornstar --include-package=pornstar.__utils,pornstar.__model,pornstar.__coco,pornstar.__config,pornstar.__main,pornstar.__PIL_filters --output-dir=build

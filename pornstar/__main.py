@@ -20,6 +20,9 @@ ROOT_DIR = os.path.abspath(terminal.fix_path("~/Pornstar"))
 if not terminal.exists(ROOT_DIR):
     terminal.run(f"mkdir {ROOT_DIR}")
 
+import logging
+logging.basicConfig(filename=os.path.join(ROOT_DIR, "__main.log"), level=logging.DEBUG, filemode='w', format='%(levelname)s - %(message)s')
+
 
 class __InferenceConfig(__CocoConfig):
     # Set batch size to 1 since we'll be running inference on
@@ -84,7 +87,7 @@ def __opencv_frame_to_PIL_img(frame):
 
 def __PIL_img_to_opencv_frame(pil_img):
     numpy_img = np.asarray(pil_img)
-    numpy_img = cv2.cvtColor(numpy_img, cv2.COLOR_BGR2RGB)
+    #numpy_img = cv2.cvtColor(numpy_img, cv2.COLOR_BGR2RGB)
     return numpy_img[:, :, :3]
 
 
@@ -107,14 +110,17 @@ def get_human_and_background_from_a_frame(frame):
             if ((mask1.shape[2] == 1) or (mask2.shape[2] == 1)):
                 human_pixels = frame*mask1
                 background_pixels = frame*mask2
-                return human_pixels, background_pixels
 
-    return None, None
+                return human_pixels, background_pixels, (mask1.astype(np.uint8), mask2.astype(np.uint8))
+
+    return None, None, None
 
 
 def read_img_as_a_frame(path_of_img):
-    raw = cv2.imread(path_of_img)
-    return cv2.cvtColor(raw, cv2.COLOR_BGR2RGB)
+    frame = cv2.imread(path_of_img)
+    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    logging.info(f"read an image: {path_of_img}")
+    return frame
 
 
 def display_a_frame(frame):
@@ -126,27 +132,42 @@ def display_a_frame(frame):
 
 
 def save_a_frame_as_an_img(path_of_img, frame):
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     cv2.imwrite(path_of_img, frame)
 
 
-def blur_a_frame(frame, degree=20, method=1):
+def blur_a_frame(frame, kernel=None, method=1):
     if method == 1:
-        return cv2.blur(frame, (degree, degree))
+        if (kernel == None):
+            kernel = 25
+        return cv2.blur(frame, (kernel, kernel))
     elif method == 2:
-        return cv2.GaussianBlur(frame, (degree, degree), 0)
+        if (kernel == None):
+            kernel = 25
+        return cv2.GaussianBlur(frame, (kernel, kernel), 0)
     elif method == 3:
-        return cv2.medianBlur(frame, degree)
+        if (kernel == None):
+            kernel = 39
+        else:
+            assert (kernel % 2 != 0), "The kernel must be odd!"
+        return cv2.medianBlur(frame, kernel)
 
 
 def oil_painting_effect(frame):
     PIL_img = __opencv_frame_to_PIL_img(frame)
-    PIL_img = oil_painting(PIL_img, 8, 255)
-    frame = __PIL_img_to_opencv_frame(PIL_img) 
+    #PIL_img = oil_painting(PIL_img, 8, 255)
+    PIL_img = oil_painting(PIL_img, 1, 1)
+    frame = __PIL_img_to_opencv_frame(PIL_img)
     return frame
 
 
+def create_a_white_background(mask):
+    white = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
+    white.fill(255)
+    white = cv2.bitwise_and(white, white, mask=mask)
+    logging.info(f"Just created a white background")
+    return white
+
+
 def combine_two_frame(frame1, frame2):
-    print(frame1.shape)
-    print(frame2.shape)
     return cv2.add(frame1, frame2)
