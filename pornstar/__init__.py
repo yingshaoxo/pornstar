@@ -1,3 +1,16 @@
-#from .__main import terminal, get_human_and_background_from_a_frame, read_img_as_a_frame, display_a_frame, save_a_frame_as_an_img, blur_a_frame, combine_two_frame, oil_painting_effect, create_a_white_background
-#from .__main import terminal, get_human_and_background_from_a_frame, read_img_as_a_frame, display_a_frame, save_a_frame_as_an_img, blur_a_frame, combine_two_frame, oil_painting_effect, create_a_white_background
-from .__main import *
+from .__main import (
+    terminal,
+    read_image_as_a_frame,
+    combine_two_frame,
+    display_a_frame,
+    save_a_frame_as_an_image,
+    get_masked_image,
+    get_human_and_background_masks_from_a_frame,
+    stylize_background,
+    effect_of_blur,
+    effect_of_oil_painting,
+    effect_of_pure_white,
+)
+
+
+#from .__main import *

@@ -48,9 +48,9 @@ import pycocotools
 import skimage.color
 import errno
 import cv2
+import logging
 import matplotlib.pyplot
 import random
-import logging
 import __config
 import keras.backend
 import mrcnn.parallel_model

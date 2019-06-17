@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import logging
 from .__coco import CocoConfig as __CocoConfig
 from .__model import MaskRCNN as __MaskRCNN
 from .__utils import download_trained_weights as __download_trained_weights
@@ -10,6 +11,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+import math
 
 from auto_everything.base import Terminal
 terminal = Terminal()
@@ -20,8 +22,8 @@ ROOT_DIR = os.path.abspath(terminal.fix_path("~/Pornstar"))
 if not terminal.exists(ROOT_DIR):
     terminal.run(f"mkdir {ROOT_DIR}")
 
-import logging
-logging.basicConfig(filename=os.path.join(ROOT_DIR, "__main.log"), level=logging.DEBUG, filemode='w', format='%(levelname)s - %(message)s')
+logging.basicConfig(filename=os.path.join(ROOT_DIR, "__main.log"),
+                    level=logging.DEBUG, filemode='w', format='%(levelname)s - %(message)s')
 
 
 class __InferenceConfig(__CocoConfig):
@@ -29,6 +31,7 @@ class __InferenceConfig(__CocoConfig):
     # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
+    USE_MINI_MASK = False
 
 
 def init_model():
@@ -80,18 +83,48 @@ __class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
 model = init_model()
 
 
-def __opencv_frame_to_PIL_img(frame):
-    img = Image.fromarray(frame)
-    return img
+def __opencv_frame_to_PIL_image(frame):
+    image = Image.fromarray(frame)
+    return image
 
 
-def __PIL_img_to_opencv_frame(pil_img):
-    numpy_img = np.asarray(pil_img)
-    #numpy_img = cv2.cvtColor(numpy_img, cv2.COLOR_BGR2RGB)
-    return numpy_img[:, :, :3]
+def __PIL_image_to_opencv_frame(pil_image):
+    numpy_image = np.asarray(pil_image)
+    #numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2RGB)
+    return numpy_image[:, :, :3]
 
 
-def get_human_and_background_from_a_frame(frame):
+def read_image_as_a_frame(path_of_image):
+    frame = cv2.imread(path_of_image)
+    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    logging.info(f"read an image: {path_of_image}")
+    return frame
+
+
+def combine_two_frame(frame1, frame2):
+    return cv2.add(frame1, frame2)
+
+
+def display_a_frame(frame):
+    logging.debug(f"\n\ndisplay_a_frame with a shape of {frame.shape}")
+    #plt.title('Made by yingshaoxo')
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    plt.imshow(frame)
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+def save_a_frame_as_an_image(path_of_image, frame):
+    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    cv2.imwrite(path_of_image, frame)
+
+
+def get_masked_image(frame, mask):
+    image = frame*mask
+    return image
+
+
+def get_human_and_background_masks_from_a_frame(frame):
     results = model.detect([frame], verbose=0)
     r = results[0]
     # visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], r['scores'])
@@ -108,35 +141,30 @@ def get_human_and_background_from_a_frame(frame):
         #print(f"frame shape: {frame.shape}\nmask1 shape: {mask1.shape}\nbackgound shape: {backgound.shape}\nmask2 shape: {mask2.shape}\n\n")
         if (frame.shape[:2] == mask1.shape[:2] == mask2.shape[:2]):
             if ((mask1.shape[2] == 1) or (mask2.shape[2] == 1)):
-                human_pixels = frame*mask1
-                background_pixels = frame*mask2
+                #human_pixels = frame*mask1
+                #background_pixels = frame*mask2
 
-                return human_pixels, background_pixels, (mask1.astype(np.uint8), mask2.astype(np.uint8))
+                return mask1.astype(np.uint8), mask2.astype(np.uint8)
 
-    return None, None, None
-
-
-def read_img_as_a_frame(path_of_img):
-    frame = cv2.imread(path_of_img)
-    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    logging.info(f"read an image: {path_of_img}")
-    return frame
+    return None, None
 
 
-def display_a_frame(frame):
-    #plt.title('Made by yingshaoxo')
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    plt.imshow(frame)
-    plt.xticks([]), plt.yticks([])
-    plt.show()
+def stylize_background(frame, stylize_function=None):
+    if stylize_function == None:
+        stylize_function = effect_of_pure_white
+    stylized_background = stylize_function(frame)
+    person_mask, background_mask = get_human_and_background_masks_from_a_frame(
+        frame)
+    if isinstance(person_mask, np.ndarray) and isinstance(background_mask, np.ndarray):
+        background = get_masked_image(stylized_background, background_mask)
+        person = get_masked_image(frame, person_mask)
+        the_whole_img = combine_two_frame(person, background)
+        return the_whole_img
+    else:
+        return stylized_background
 
 
-def save_a_frame_as_an_img(path_of_img, frame):
-    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    cv2.imwrite(path_of_img, frame)
-
-
-def blur_a_frame(frame, kernel=None, method=1):
+def effect_of_blur(frame, kernel=None, method=1):
     if method == 1:
         if (kernel == None):
             kernel = 25
@@ -153,21 +181,15 @@ def blur_a_frame(frame, kernel=None, method=1):
         return cv2.medianBlur(frame, kernel)
 
 
-def oil_painting_effect(frame):
-    PIL_img = __opencv_frame_to_PIL_img(frame)
-    #PIL_img = oil_painting(PIL_img, 8, 255)
-    PIL_img = oil_painting(PIL_img, 1, 1)
-    frame = __PIL_img_to_opencv_frame(PIL_img)
+def effect_of_oil_painting(frame):
+    PIL_image = __opencv_frame_to_PIL_image(frame)
+    #PIL_image = oil_painting(PIL_image, 8, 255)
+    PIL_image = oil_painting(PIL_image, 8, 255)
+    frame = __PIL_image_to_opencv_frame(PIL_image)
     return frame
 
 
-def create_a_white_background(mask):
-    white = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
+def effect_of_pure_white(frame):
+    white = np.zeros((frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
     white.fill(255)
-    white = cv2.bitwise_and(white, white, mask=mask)
-    logging.info(f"Just created a white background")
     return white
-
-
-def combine_two_frame(frame1, frame2):
-    return cv2.add(frame1, frame2)

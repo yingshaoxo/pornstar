@@ -32,29 +32,32 @@ PyDictObject *moduledict_pornstar;
 
 /* The declarations of module constants used, if any. */
 extern PyObject *const_str_plain_display_a_frame;
-extern PyObject *const_str_plain_blur_a_frame;
 static PyObject *const_str_plain_environ;
-extern PyObject *const_str_plain_save_a_frame_as_an_img;
 extern PyObject *const_str_plain___spec__;
+extern PyObject *const_str_digest_7c96376559becb4a27fd2d527cebb0a3;
 static PyObject *const_str_plain___main;
+static PyObject *const_tuple_19cdaf48645c7a24f7770efa52522564_tuple;
 extern PyObject *const_int_pos_1;
 static PyObject *const_tuple_5c30f6bce7144c401e5442ab2c90073d_tuple;
 extern PyObject *const_str_plain___file__;
 extern PyObject *const_str_plain_terminal;
-extern PyObject *const_str_plain_oil_painting_effect;
+extern PyObject *const_str_plain_get_masked_image;
 extern PyObject *const_str_plain_path;
 static PyObject *const_str_digest_89916c115a85b02eb5ba58d8b4568262;
-extern PyObject *const_str_plain_get_human_and_background_from_a_frame;
-extern PyObject *const_str_plain_read_img_as_a_frame;
+extern PyObject *const_str_plain_save_a_frame_as_an_image;
+extern PyObject *const_str_plain_effect_of_pure_white;
 extern PyObject *const_str_plain_origin;
 static PyObject *const_str_plain_NUITKA_PACKAGE_pornstar;
 static PyObject *const_str_digest_5bfaf90dbd407b4fc29090c8f6415242;
-static PyObject *const_tuple_b9818b9614b3e27967c68665dccc4879_tuple;
+extern PyObject *const_str_plain_stylize_background;
+extern PyObject *const_str_plain_effect_of_oil_painting;
+extern PyObject *const_str_plain_read_image_as_a_frame;
 extern PyObject *const_str_plain___path__;
 extern PyObject *const_str_plain_combine_two_frame;
 extern PyObject *const_tuple_empty;
 extern PyObject *const_str_plain_get;
 extern PyObject *const_str_plain_has_location;
+extern PyObject *const_str_plain_effect_of_blur;
 static PyObject *const_str_digest_24cd8d8e8f23ffeb9b9ab70426ce873b;
 static PyObject *const_str_plain_pornstar;
 static PyObject *const_str_plain_dirname;
@@ -70,21 +73,24 @@ static void createModuleConstants( void )
 {
     const_str_plain_environ = UNSTREAM_STRING_ASCII( &constant_bin[ 0 ], 7, 1 );
     const_str_plain___main = UNSTREAM_STRING_ASCII( &constant_bin[ 7 ], 6, 1 );
+    const_tuple_19cdaf48645c7a24f7770efa52522564_tuple = PyTuple_New( 11 );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 0, const_str_plain_terminal ); Py_INCREF( const_str_plain_terminal );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 1, const_str_plain_read_image_as_a_frame ); Py_INCREF( const_str_plain_read_image_as_a_frame );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 2, const_str_plain_combine_two_frame ); Py_INCREF( const_str_plain_combine_two_frame );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 3, const_str_plain_display_a_frame ); Py_INCREF( const_str_plain_display_a_frame );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 4, const_str_plain_save_a_frame_as_an_image ); Py_INCREF( const_str_plain_save_a_frame_as_an_image );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 5, const_str_plain_get_masked_image ); Py_INCREF( const_str_plain_get_masked_image );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 6, const_str_digest_7c96376559becb4a27fd2d527cebb0a3 ); Py_INCREF( const_str_digest_7c96376559becb4a27fd2d527cebb0a3 );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 7, const_str_plain_stylize_background ); Py_INCREF( const_str_plain_stylize_background );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 8, const_str_plain_effect_of_blur ); Py_INCREF( const_str_plain_effect_of_blur );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 9, const_str_plain_effect_of_oil_painting ); Py_INCREF( const_str_plain_effect_of_oil_painting );
+    PyTuple_SET_ITEM( const_tuple_19cdaf48645c7a24f7770efa52522564_tuple, 10, const_str_plain_effect_of_pure_white ); Py_INCREF( const_str_plain_effect_of_pure_white );
     const_tuple_5c30f6bce7144c401e5442ab2c90073d_tuple = PyTuple_New( 2 );
     const_str_plain_NUITKA_PACKAGE_pornstar = UNSTREAM_STRING_ASCII( &constant_bin[ 13 ], 23, 1 );
     PyTuple_SET_ITEM( const_tuple_5c30f6bce7144c401e5442ab2c90073d_tuple, 0, const_str_plain_NUITKA_PACKAGE_pornstar ); Py_INCREF( const_str_plain_NUITKA_PACKAGE_pornstar );
     const_str_digest_5bfaf90dbd407b4fc29090c8f6415242 = UNSTREAM_STRING_ASCII( &constant_bin[ 36 ], 9, 0 );
     PyTuple_SET_ITEM( const_tuple_5c30f6bce7144c401e5442ab2c90073d_tuple, 1, const_str_digest_5bfaf90dbd407b4fc29090c8f6415242 ); Py_INCREF( const_str_digest_5bfaf90dbd407b4fc29090c8f6415242 );
     const_str_digest_89916c115a85b02eb5ba58d8b4568262 = UNSTREAM_STRING_ASCII( &constant_bin[ 45 ], 20, 0 );
-    const_tuple_b9818b9614b3e27967c68665dccc4879_tuple = PyTuple_New( 8 );
-    PyTuple_SET_ITEM( const_tuple_b9818b9614b3e27967c68665dccc4879_tuple, 0, const_str_plain_terminal ); Py_INCREF( const_str_plain_terminal );
-    PyTuple_SET_ITEM( const_tuple_b9818b9614b3e27967c68665dccc4879_tuple, 1, const_str_plain_get_human_and_background_from_a_frame ); Py_INCREF( const_str_plain_get_human_and_background_from_a_frame );
-    PyTuple_SET_ITEM( const_tuple_b9818b9614b3e27967c68665dccc4879_tuple, 2, const_str_plain_read_img_as_a_frame ); Py_INCREF( const_str_plain_read_img_as_a_frame );
-    PyTuple_SET_ITEM( const_tuple_b9818b9614b3e27967c68665dccc4879_tuple, 3, const_str_plain_display_a_frame ); Py_INCREF( const_str_plain_display_a_frame );
-    PyTuple_SET_ITEM( const_tuple_b9818b9614b3e27967c68665dccc4879_tuple, 4, const_str_plain_save_a_frame_as_an_img ); Py_INCREF( const_str_plain_save_a_frame_as_an_img );
-    PyTuple_SET_ITEM( const_tuple_b9818b9614b3e27967c68665dccc4879_tuple, 5, const_str_plain_blur_a_frame ); Py_INCREF( const_str_plain_blur_a_frame );
-    PyTuple_SET_ITEM( const_tuple_b9818b9614b3e27967c68665dccc4879_tuple, 6, const_str_plain_combine_two_frame ); Py_INCREF( const_str_plain_combine_two_frame );
-    PyTuple_SET_ITEM( const_tuple_b9818b9614b3e27967c68665dccc4879_tuple, 7, const_str_plain_oil_painting_effect ); Py_INCREF( const_str_plain_oil_painting_effect );
     const_str_digest_24cd8d8e8f23ffeb9b9ab70426ce873b = UNSTREAM_STRING_ASCII( &constant_bin[ 65 ], 17, 0 );
     const_str_plain_pornstar = UNSTREAM_STRING_ASCII( &constant_bin[ 28 ], 8, 1 );
     const_str_plain_dirname = UNSTREAM_STRING_ASCII( &constant_bin[ 82 ], 7, 1 );
@@ -595,7 +601,7 @@ MOD_INIT_DECL( pornstar )
         tmp_name_name_1 = const_str_plain___main;
         tmp_globals_name_1 = (PyObject *)moduledict_pornstar;
         tmp_locals_name_1 = Py_None;
-        tmp_fromlist_name_1 = const_tuple_b9818b9614b3e27967c68665dccc4879_tuple;
+        tmp_fromlist_name_1 = const_tuple_19cdaf48645c7a24f7770efa52522564_tuple;
         tmp_level_name_1 = const_int_pos_1;
         frame_ca211d625ea69e03d756f5e5750ed873->m_frame.f_lineno = 1;
         tmp_assign_source_5 = IMPORT_MODULE5( tmp_name_name_1, tmp_globals_name_1, tmp_locals_name_1, tmp_fromlist_name_1, tmp_level_name_1 );
@@ -656,13 +662,13 @@ MOD_INIT_DECL( pornstar )
            tmp_assign_source_7 = IMPORT_NAME_OR_MODULE(
                 tmp_import_name_from_2,
                 (PyObject *)MODULE_DICT(tmp_import_name_from_2),
-                const_str_plain_get_human_and_background_from_a_frame,
+                const_str_plain_read_image_as_a_frame,
                 const_int_pos_1
             );
         }
         else
         {
-           tmp_assign_source_7 = IMPORT_NAME( tmp_import_name_from_2, const_str_plain_get_human_and_background_from_a_frame );
+           tmp_assign_source_7 = IMPORT_NAME( tmp_import_name_from_2, const_str_plain_read_image_as_a_frame );
         }
 
         if ( tmp_assign_source_7 == NULL )
@@ -676,7 +682,7 @@ MOD_INIT_DECL( pornstar )
 
             goto try_except_handler_1;
         }
-        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_get_human_and_background_from_a_frame, tmp_assign_source_7 );
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_read_image_as_a_frame, tmp_assign_source_7 );
     }
     {
         PyObject *tmp_assign_source_8;
@@ -688,13 +694,13 @@ MOD_INIT_DECL( pornstar )
            tmp_assign_source_8 = IMPORT_NAME_OR_MODULE(
                 tmp_import_name_from_3,
                 (PyObject *)MODULE_DICT(tmp_import_name_from_3),
-                const_str_plain_read_img_as_a_frame,
+                const_str_plain_combine_two_frame,
                 const_int_pos_1
             );
         }
         else
         {
-           tmp_assign_source_8 = IMPORT_NAME( tmp_import_name_from_3, const_str_plain_read_img_as_a_frame );
+           tmp_assign_source_8 = IMPORT_NAME( tmp_import_name_from_3, const_str_plain_combine_two_frame );
         }
 
         if ( tmp_assign_source_8 == NULL )
@@ -708,7 +714,7 @@ MOD_INIT_DECL( pornstar )
 
             goto try_except_handler_1;
         }
-        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_read_img_as_a_frame, tmp_assign_source_8 );
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_combine_two_frame, tmp_assign_source_8 );
     }
     {
         PyObject *tmp_assign_source_9;
@@ -752,13 +758,13 @@ MOD_INIT_DECL( pornstar )
            tmp_assign_source_10 = IMPORT_NAME_OR_MODULE(
                 tmp_import_name_from_5,
                 (PyObject *)MODULE_DICT(tmp_import_name_from_5),
-                const_str_plain_save_a_frame_as_an_img,
+                const_str_plain_save_a_frame_as_an_image,
                 const_int_pos_1
             );
         }
         else
         {
-           tmp_assign_source_10 = IMPORT_NAME( tmp_import_name_from_5, const_str_plain_save_a_frame_as_an_img );
+           tmp_assign_source_10 = IMPORT_NAME( tmp_import_name_from_5, const_str_plain_save_a_frame_as_an_image );
         }
 
         if ( tmp_assign_source_10 == NULL )
@@ -772,7 +778,7 @@ MOD_INIT_DECL( pornstar )
 
             goto try_except_handler_1;
         }
-        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_save_a_frame_as_an_img, tmp_assign_source_10 );
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_save_a_frame_as_an_image, tmp_assign_source_10 );
     }
     {
         PyObject *tmp_assign_source_11;
@@ -784,13 +790,13 @@ MOD_INIT_DECL( pornstar )
            tmp_assign_source_11 = IMPORT_NAME_OR_MODULE(
                 tmp_import_name_from_6,
                 (PyObject *)MODULE_DICT(tmp_import_name_from_6),
-                const_str_plain_blur_a_frame,
+                const_str_plain_get_masked_image,
                 const_int_pos_1
             );
         }
         else
         {
-           tmp_assign_source_11 = IMPORT_NAME( tmp_import_name_from_6, const_str_plain_blur_a_frame );
+           tmp_assign_source_11 = IMPORT_NAME( tmp_import_name_from_6, const_str_plain_get_masked_image );
         }
 
         if ( tmp_assign_source_11 == NULL )
@@ -804,7 +810,7 @@ MOD_INIT_DECL( pornstar )
 
             goto try_except_handler_1;
         }
-        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_blur_a_frame, tmp_assign_source_11 );
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_get_masked_image, tmp_assign_source_11 );
     }
     {
         PyObject *tmp_assign_source_12;
@@ -816,13 +822,13 @@ MOD_INIT_DECL( pornstar )
            tmp_assign_source_12 = IMPORT_NAME_OR_MODULE(
                 tmp_import_name_from_7,
                 (PyObject *)MODULE_DICT(tmp_import_name_from_7),
-                const_str_plain_combine_two_frame,
+                const_str_digest_7c96376559becb4a27fd2d527cebb0a3,
                 const_int_pos_1
             );
         }
         else
         {
-           tmp_assign_source_12 = IMPORT_NAME( tmp_import_name_from_7, const_str_plain_combine_two_frame );
+           tmp_assign_source_12 = IMPORT_NAME( tmp_import_name_from_7, const_str_digest_7c96376559becb4a27fd2d527cebb0a3 );
         }
 
         if ( tmp_assign_source_12 == NULL )
@@ -836,7 +842,7 @@ MOD_INIT_DECL( pornstar )
 
             goto try_except_handler_1;
         }
-        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_combine_two_frame, tmp_assign_source_12 );
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_digest_7c96376559becb4a27fd2d527cebb0a3, tmp_assign_source_12 );
     }
     {
         PyObject *tmp_assign_source_13;
@@ -848,13 +854,13 @@ MOD_INIT_DECL( pornstar )
            tmp_assign_source_13 = IMPORT_NAME_OR_MODULE(
                 tmp_import_name_from_8,
                 (PyObject *)MODULE_DICT(tmp_import_name_from_8),
-                const_str_plain_oil_painting_effect,
+                const_str_plain_stylize_background,
                 const_int_pos_1
             );
         }
         else
         {
-           tmp_assign_source_13 = IMPORT_NAME( tmp_import_name_from_8, const_str_plain_oil_painting_effect );
+           tmp_assign_source_13 = IMPORT_NAME( tmp_import_name_from_8, const_str_plain_stylize_background );
         }
 
         if ( tmp_assign_source_13 == NULL )
@@ -868,7 +874,103 @@ MOD_INIT_DECL( pornstar )
 
             goto try_except_handler_1;
         }
-        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_oil_painting_effect, tmp_assign_source_13 );
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_stylize_background, tmp_assign_source_13 );
+    }
+    {
+        PyObject *tmp_assign_source_14;
+        PyObject *tmp_import_name_from_9;
+        CHECK_OBJECT( tmp_import_from_1__module );
+        tmp_import_name_from_9 = tmp_import_from_1__module;
+        if ( PyModule_Check( tmp_import_name_from_9 ) )
+        {
+           tmp_assign_source_14 = IMPORT_NAME_OR_MODULE(
+                tmp_import_name_from_9,
+                (PyObject *)MODULE_DICT(tmp_import_name_from_9),
+                const_str_plain_effect_of_blur,
+                const_int_pos_1
+            );
+        }
+        else
+        {
+           tmp_assign_source_14 = IMPORT_NAME( tmp_import_name_from_9, const_str_plain_effect_of_blur );
+        }
+
+        if ( tmp_assign_source_14 == NULL )
+        {
+            assert( ERROR_OCCURRED() );
+
+            FETCH_ERROR_OCCURRED( &exception_type, &exception_value, &exception_tb );
+
+
+            exception_lineno = 1;
+
+            goto try_except_handler_1;
+        }
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_effect_of_blur, tmp_assign_source_14 );
+    }
+    {
+        PyObject *tmp_assign_source_15;
+        PyObject *tmp_import_name_from_10;
+        CHECK_OBJECT( tmp_import_from_1__module );
+        tmp_import_name_from_10 = tmp_import_from_1__module;
+        if ( PyModule_Check( tmp_import_name_from_10 ) )
+        {
+           tmp_assign_source_15 = IMPORT_NAME_OR_MODULE(
+                tmp_import_name_from_10,
+                (PyObject *)MODULE_DICT(tmp_import_name_from_10),
+                const_str_plain_effect_of_oil_painting,
+                const_int_pos_1
+            );
+        }
+        else
+        {
+           tmp_assign_source_15 = IMPORT_NAME( tmp_import_name_from_10, const_str_plain_effect_of_oil_painting );
+        }
+
+        if ( tmp_assign_source_15 == NULL )
+        {
+            assert( ERROR_OCCURRED() );
+
+            FETCH_ERROR_OCCURRED( &exception_type, &exception_value, &exception_tb );
+
+
+            exception_lineno = 1;
+
+            goto try_except_handler_1;
+        }
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_effect_of_oil_painting, tmp_assign_source_15 );
+    }
+    {
+        PyObject *tmp_assign_source_16;
+        PyObject *tmp_import_name_from_11;
+        CHECK_OBJECT( tmp_import_from_1__module );
+        tmp_import_name_from_11 = tmp_import_from_1__module;
+        if ( PyModule_Check( tmp_import_name_from_11 ) )
+        {
+           tmp_assign_source_16 = IMPORT_NAME_OR_MODULE(
+                tmp_import_name_from_11,
+                (PyObject *)MODULE_DICT(tmp_import_name_from_11),
+                const_str_plain_effect_of_pure_white,
+                const_int_pos_1
+            );
+        }
+        else
+        {
+           tmp_assign_source_16 = IMPORT_NAME( tmp_import_name_from_11, const_str_plain_effect_of_pure_white );
+        }
+
+        if ( tmp_assign_source_16 == NULL )
+        {
+            assert( ERROR_OCCURRED() );
+
+            FETCH_ERROR_OCCURRED( &exception_type, &exception_value, &exception_tb );
+
+
+            exception_lineno = 1;
+
+            goto try_except_handler_1;
+        }
+        UPDATE_STRING_DICT1( moduledict_pornstar, (Nuitka_StringObject *)const_str_plain_effect_of_pure_white, tmp_assign_source_16 );
     }
     goto try_end_1;
     // Exception handler code:
