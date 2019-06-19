@@ -13,6 +13,9 @@ import numpy as np
 from PIL import Image
 import math
 
+from moviepy.editor import VideoFileClip
+from pathlib import Path
+
 from auto_everything.base import Terminal
 terminal = Terminal()
 
@@ -193,3 +196,18 @@ def effect_of_pure_white(frame):
     white = np.zeros((frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
     white.fill(255)
     return white
+
+
+def process_video(path_of_video, effect_function=None, save_to=None):
+    def return_the_same_frame(frame):
+        return frame
+
+    if effect_function == None:
+        effect_function = return_the_same_frame
+    if save_to == None:
+        file_ = Path(path_of_video)
+        save_to = file_.with_name(file_.stem + "_modified.mp4")
+
+    clip = VideoFileClip(path_of_video)
+    modified_clip = clip.fl_image(effect_function)
+    modified_clip.write_videofile(save_to)

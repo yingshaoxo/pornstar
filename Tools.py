@@ -31,5 +31,12 @@ git reset --hard origin/master
 git reset --hard HEAD^
 """)
 
+    def publish(self):
+        t.run("""
+#python3 setup.py register
+python3 setup.py sdist
+#python3 setup.py sdist upload
+""")
+
 py.make_it_runnable()
 py.fire(Tools)
