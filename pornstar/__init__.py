@@ -7,10 +7,12 @@ from .__main import (
     get_masked_image,
     get_human_and_background_masks_from_a_frame,
     stylize_background,
+    smooth_human_body,
     effect_of_blur,
     effect_of_oil_painting,
     effect_of_pure_white,
     process_video,
+    process_camera,
 )
 
 

@@ -134,20 +134,28 @@ def get_human_and_background_masks_from_a_frame(frame):
 
     # print(r['class_ids'])
     if (__class_names.index("person") in r['class_ids']):
-        index = np.where(r['class_ids'] == __class_names.index("person"))
+        a_tuple = np.where(r['class_ids'] == __class_names.index("person"))
+        index_array = a_tuple[0]
 
-        # print(r['masks'].shape) # The shape is stange, you should see function display_instances() in visualize.py for more details
-        mask = np.squeeze(r['masks'][:, :, index], axis=3)
-        mask1 = (mask == True)  # non black pixel, human shape
-        mask2 = (mask == False)  # black pixel, non-human shape
+        # print(r['masks'].shape) # The shape is strange, you should see function display_instances() in visualize.py for more details
+        if len(index_array) > 0:
+            logging.debug(f"index_array shape: {index_array}")
+            shape = r['masks'][:, :, [0]].shape
+            logging.debug(f"original frame shape: {shape}")
+            final_mask1 = np.zeros((shape[0], shape[1], 1), dtype=np.uint8)
+            logging.debug(f"final_mask1 size: {final_mask1.shape}")
+            for index in index_array:
+                mask = r['masks'][:, :, [index]]
+                logging.debug(f"single mask after use index: {mask.shape}")
 
-        #print(f"frame shape: {frame.shape}\nmask1 shape: {mask1.shape}\nbackgound shape: {backgound.shape}\nmask2 shape: {mask2.shape}\n\n")
-        if (frame.shape[:2] == mask1.shape[:2] == mask2.shape[:2]):
-            if ((mask1.shape[2] == 1) or (mask2.shape[2] == 1)):
-                #human_pixels = frame*mask1
-                #background_pixels = frame*mask2
+                mask1 = (mask == True).astype(np.uint8)  # non black pixel, human shape
+                #mask2 = (mask == False).astype(np.uint8)  # black pixel, non-human shape
 
-                return mask1.astype(np.uint8), mask2.astype(np.uint8)
+                logging.debug(f"mask1.shape: {mask1.shape}")
+                final_mask1 = np.logical_or(final_mask1, mask1)#cv2.bitwise_or(final_mask1, mask1)
+
+            logging.debug(f"final_mask1 size: {final_mask1.shape}\n")
+            return final_mask1, np.logical_not(final_mask1)
 
     return None, None
 
@@ -166,6 +174,17 @@ def stylize_background(frame, stylize_function=None):
     else:
         return stylized_background
 
+def smooth_human_body(frame):
+    person_mask, background_mask = get_human_and_background_masks_from_a_frame(
+        frame)
+    if isinstance(person_mask, np.ndarray) and isinstance(background_mask, np.ndarray):
+        background = get_masked_image(frame, background_mask)
+        person = get_masked_image(frame, person_mask)
+        person = effect_of_blur_for_face(person)
+        the_whole_img = combine_two_frame(person, background)
+        return the_whole_img
+    else:
+        return frame
 
 def effect_of_blur(frame, kernel=None, method=1):
     if method == 1:
@@ -182,6 +201,10 @@ def effect_of_blur(frame, kernel=None, method=1):
         else:
             assert (kernel % 2 != 0), "The kernel must be odd!"
         return cv2.medianBlur(frame, kernel)
+
+
+def effect_of_blur_for_face(frame, kernel=9):
+    return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)
 
 
 def effect_of_oil_painting(frame):
@@ -210,4 +233,28 @@ def process_video(path_of_video, effect_function=None, save_to=None):
 
     clip = VideoFileClip(path_of_video)
     modified_clip = clip.fl_image(effect_function)
+
+    #if terminal.exists(save_to):
+    #    os.remove(save_to)
     modified_clip.write_videofile(save_to)
+
+def process_camera(device=0, effect_function=None, save_to=None):
+    def return_the_same_frame(frame):
+        return frame
+
+    if effect_function == None:
+        effect_function = return_the_same_frame
+
+    cap = cv2.VideoCapture(device)
+
+    while(True):
+        ret, frame = cap.read()
+        #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame = effect_function(frame)
+
+        cv2.imshow(f"yingshaoxo's camera {str(device)}", frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break       
+
+    cap.release()
+    cv2.destroyAllWindows()
