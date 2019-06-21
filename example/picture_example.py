@@ -1,3 +1,6 @@
+import sys 
+sys.path.append('..')
+
 import pornstar
 
 file_name = "girl"
