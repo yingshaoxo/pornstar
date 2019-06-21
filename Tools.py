@@ -33,9 +33,10 @@ git reset --hard HEAD^
 
     def publish(self):
         t.run("""
-#python3 setup.py register
-python3 setup.py sdist
-#python3 setup.py sdist upload
+sudo rm -fr dist
+sudo rm -fr build
+sudo -H python3 setup.py sdist bdist_wheel
+twine upload dist/*
 """)
 
 py.make_it_runnable()

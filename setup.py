@@ -18,7 +18,7 @@ setup(
         'License :: OSI Approved :: MIT License'
     ],
     keywords='pornstar',
-    url='http://github.com/yingshaoxo/pornstar',
+    url='https://github.com/yingshaoxo/pornstar',
     author='yingshaoxo',
     author_email='yingshaoxo@gmail.com',
     license='MIT',
