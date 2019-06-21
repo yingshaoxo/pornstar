@@ -6,6 +6,4 @@ A Python library to make you become the next famous pornstar!
 
 ### Author
 
-yingshaoxo
-
-Email: yingshaoxo#gmail.com
+yingshaoxo#gmail.com
