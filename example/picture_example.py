@@ -11,7 +11,7 @@ frame = pornstar.read_image_as_a_frame(input_img)
 
 frame = pornstar.stylize_background(
     frame,
-    stylize_function=pornstar.effect_of_blur
+    stylize_function_list=[pornstar.effect_of_blur]
 )
 
 pornstar.display_a_frame(frame)

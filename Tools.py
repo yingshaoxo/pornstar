@@ -11,7 +11,7 @@ class Tools():
 
     def compile(self):
         commands = """
-python3 -m nuitka --module pornstar --include-package=pornstar.__utils,pornstar.__model,pornstar.__coco,pornstar.__config,pornstar.__main,pornstar.__PIL_filters --output-dir=build
+python3 -m nuitka --module pornstar --include-package=pornstar.__utils,pornstar.__model,pornstar.__coco,pornstar.__config,pornstar.__main,pornstar.__PIL_filters,__CV2_filters --output-dir=build
         """
         t.run(commands)
 

@@ -5,6 +5,7 @@ from .__coco import CocoConfig as __CocoConfig
 from .__model import MaskRCNN as __MaskRCNN
 from .__utils import download_trained_weights as __download_trained_weights
 from .__PIL_filters import oil_painting
+from .__CV2_filters import Gingham
 
 import os
 import cv2
@@ -93,13 +94,13 @@ def __opencv_frame_to_PIL_image(frame):
 
 def __PIL_image_to_opencv_frame(pil_image):
     numpy_image = np.asarray(pil_image)
-    #numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2RGB)
+    # numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2RGB)
     return numpy_image[:, :, :3]
 
 
 def read_image_as_a_frame(path_of_image):
     frame = cv2.imread(path_of_image)
-    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     logging.info(f"read an image: {path_of_image}")
     return frame
 
@@ -110,7 +111,7 @@ def combine_two_frame(frame1, frame2):
 
 def display_a_frame(frame):
     logging.debug(f"\n\ndisplay_a_frame with a shape of {frame.shape}")
-    #plt.title('Made by yingshaoxo')
+    # plt.title('Made by yingshaoxo')
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     plt.imshow(frame)
     plt.xticks([]), plt.yticks([])
@@ -118,7 +119,7 @@ def display_a_frame(frame):
 
 
 def save_a_frame_as_an_image(path_of_image, frame):
-    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     cv2.imwrite(path_of_image, frame)
 
 
@@ -148,11 +149,13 @@ def get_human_and_background_masks_from_a_frame(frame):
                 mask = r['masks'][:, :, [index]]
                 logging.debug(f"single mask after use index: {mask.shape}")
 
-                mask1 = (mask == True).astype(np.uint8)  # non black pixel, human shape
-                #mask2 = (mask == False).astype(np.uint8)  # black pixel, non-human shape
+                # non black pixel, human shape
+                mask1 = (mask == True).astype(np.uint8)
+                # mask2 = (mask == False).astype(np.uint8)  # black pixel, non-human shape
 
                 logging.debug(f"mask1.shape: {mask1.shape}")
-                final_mask1 = np.logical_or(final_mask1, mask1)#cv2.bitwise_or(final_mask1, mask1)
+                # cv2.bitwise_or(final_mask1, mask1)
+                final_mask1 = np.logical_or(final_mask1, mask1)
 
             logging.debug(f"final_mask1 size: {final_mask1.shape}\n")
             return final_mask1, np.logical_not(final_mask1)
@@ -160,10 +163,14 @@ def get_human_and_background_masks_from_a_frame(frame):
     return None, None
 
 
-def stylize_background(frame, stylize_function=None):
-    if stylize_function == None:
-        stylize_function = effect_of_pure_white
-    stylized_background = stylize_function(frame)
+def stylize_background(frame, stylize_function_list=None):
+    if stylize_function_list == None:
+        stylize_function_list = [effect_of_pure_white]
+
+    stylized_background = frame
+    for stylize_function in stylize_function_list:
+        stylized_background = stylize_function(stylized_background)
+
     person_mask, background_mask = get_human_and_background_masks_from_a_frame(
         frame)
     if isinstance(person_mask, np.ndarray) and isinstance(background_mask, np.ndarray):
@@ -174,17 +181,58 @@ def stylize_background(frame, stylize_function=None):
     else:
         return stylized_background
 
-def smooth_human_body(frame):
+
+def stylize_human_body(frame, stylize_function_list=None):
+    if stylize_function_list == None:
+        stylize_function_list = [effect_of_blur_for_face]
+
     person_mask, background_mask = get_human_and_background_masks_from_a_frame(
         frame)
     if isinstance(person_mask, np.ndarray) and isinstance(background_mask, np.ndarray):
         background = get_masked_image(frame, background_mask)
         person = get_masked_image(frame, person_mask)
-        person = effect_of_blur_for_face(person)
+        for stylize_function in stylize_function_list:
+            person = stylize_function(person)
         the_whole_img = combine_two_frame(person, background)
         return the_whole_img
     else:
         return frame
+
+
+def stylize_background_and_human_body(frame, background_stylize_function_list=None, human_body_stylize_function_list=None):
+    if background_stylize_function_list == None:
+        background_stylize_function_list = [effect_of_blur]
+    if human_body_stylize_function_list == None:
+        human_body_stylize_function_list = [effect_of_blur_for_face]
+
+    stylized_background = frame
+    for stylize_function in background_stylize_function_list:
+        stylized_background = stylize_function(stylized_background)
+
+    person_mask, background_mask = get_human_and_background_masks_from_a_frame(
+        frame)
+    if isinstance(person_mask, np.ndarray) and isinstance(background_mask, np.ndarray):
+        background = get_masked_image(stylized_background, background_mask)
+
+        person = get_masked_image(frame, person_mask)
+        for stylize_function in human_body_stylize_function_list:
+            person = stylize_function(person)
+
+        the_whole_img = combine_two_frame(person, background)
+        return the_whole_img
+    else:
+        return stylized_background
+
+
+def stylize_the_whole_image(frame, stylize_function_list=None):
+    if stylize_function_list == None:
+        stylize_function_list = [effect_of_oil_painting]
+
+    for stylize_function in stylize_function_list:
+        frame = stylize_function(frame)
+
+    return frame
+
 
 def effect_of_blur(frame, kernel=None, method=1):
     if method == 1:
@@ -207,9 +255,33 @@ def effect_of_blur_for_face(frame, kernel=9):
     return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)
 
 
+def effect_of_whitening(frame, value=30):
+    # return Gingham(frame)
+    img = frame
+    imgInfo = img.shape
+    height = imgInfo[0]
+    width = imgInfo[1]
+    dst = np.zeros((height, width, 3), np.uint8)
+    for i in range(0, height):
+        for j in range(0, width):
+            (b, g, r) = img[i, j]
+            if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
+                bb = int(b)+value
+                gg = int(g)+value
+                rr = int(r)+value
+                if bb > 255:
+                    bb = 255
+                if gg > 255:
+                    gg = 255
+                if rr > 255:
+                    rr = 255
+                dst[i, j] = (bb, gg, rr)
+    return dst
+
+
 def effect_of_oil_painting(frame):
     PIL_image = __opencv_frame_to_PIL_image(frame)
-    #PIL_image = oil_painting(PIL_image, 8, 255)
+    # PIL_image = oil_painting(PIL_image, 8, 255)
     PIL_image = oil_painting(PIL_image, 8, 255)
     frame = __PIL_image_to_opencv_frame(PIL_image)
     return frame
@@ -234,9 +306,10 @@ def process_video(path_of_video, effect_function=None, save_to=None):
     clip = VideoFileClip(path_of_video)
     modified_clip = clip.fl_image(effect_function)
 
-    #if terminal.exists(save_to):
+    # if terminal.exists(save_to):
     #    os.remove(save_to)
     modified_clip.write_videofile(save_to)
+
 
 def process_camera(device=0, effect_function=None, save_to=None):
     def return_the_same_frame(frame):
@@ -249,12 +322,12 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
     while(True):
         ret, frame = cap.read()
-        #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = effect_function(frame)
 
         cv2.imshow(f"yingshaoxo's camera {str(device)}", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            break       
+            break
 
     cap.release()
     cv2.destroyAllWindows()
