@@ -52,9 +52,9 @@ ROOT_DIR = os.path.abspath(".")
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
-from .__config import Config
-from .__model import MaskRCNN
-from .__utils import Dataset
+from ._config import Config
+from ._model import MaskRCNN
+from ._utils import Dataset
 
 # Path to trained weights file
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")

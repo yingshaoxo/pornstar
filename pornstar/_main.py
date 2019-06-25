@@ -1,11 +1,11 @@
 # coding: utf-8
 
 import logging
-from .__coco import CocoConfig as __CocoConfig
-from .__model import MaskRCNN as __MaskRCNN
-from .__utils import download_trained_weights as __download_trained_weights
-from .__PIL_filters import oil_painting
-from .__CV2_filters import Gingham
+from ._coco import CocoConfig as _CocoConfig
+from ._model import MaskRCNN as _MaskRCNN
+from ._utils import download_trained_weights as _download_trained_weights
+from ._PIL_filters import oil_painting
+from ._CV2_filters import Gingham
 
 import os
 import cv2
@@ -26,11 +26,11 @@ ROOT_DIR = os.path.abspath(terminal.fix_path("~/Pornstar"))
 if not terminal.exists(ROOT_DIR):
     terminal.run(f"mkdir {ROOT_DIR}")
 
-logging.basicConfig(filename=os.path.join(ROOT_DIR, "__main.log"),
+logging.basicConfig(filename=os.path.join(ROOT_DIR, "_main.log"),
                     level=logging.DEBUG, filemode='w', format='%(levelname)s - %(message)s')
 
 
-class __InferenceConfig(__CocoConfig):
+class _InferenceConfig(_CocoConfig):
     # Set batch size to 1 since we'll be running inference on
     # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
     GPU_COUNT = 1
@@ -38,7 +38,7 @@ class __InferenceConfig(__CocoConfig):
     USE_MINI_MASK = False
 
 
-def init_model():
+def _init_model():
     # Import Mask RCNN
     # Import COCO config
 
@@ -49,14 +49,14 @@ def init_model():
     COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
     # Download COCO trained weights from Releases if needed
     if not os.path.exists(COCO_MODEL_PATH):
-        __download_trained_weights(COCO_MODEL_PATH)
+        _download_trained_weights(COCO_MODEL_PATH)
 
     # ## Configurations
-    config = __InferenceConfig()
+    config = _InferenceConfig()
     config.display()
 
     # Create model object in inference mode.
-    model = __MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
+    model = _MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
 
     # Load weights trained on MS-COCO
     model.load_weights(COCO_MODEL_PATH, by_name=True)
@@ -67,7 +67,7 @@ def init_model():
 # COCO Class names
 # Index of the class in the list is its ID. For example, to get ID of
 # the teddy bear class, use: class_names.index('teddy bear')
-__class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
+_class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
                  'bus', 'train', 'truck', 'boat', 'traffic light',
                  'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird',
                  'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear',
@@ -84,21 +84,22 @@ __class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
                  'teddy bear', 'hair drier', 'toothbrush']
 
 
-model = init_model()
+model = _init_model()
 
 
-def __opencv_frame_to_PIL_image(frame):
+def _opencv_frame_to_PIL_image(frame):
     image = Image.fromarray(frame)
     return image
 
 
-def __PIL_image_to_opencv_frame(pil_image):
+def _PIL_image_to_opencv_frame(pil_image):
     numpy_image = np.asarray(pil_image)
     # numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2RGB)
     return numpy_image[:, :, :3]
 
 
 def read_image_as_a_frame(path_of_image):
+    assert os.path.exists(path_of_image), "image does not exist!"
     frame = cv2.imread(path_of_image)
     # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     logging.info(f"read an image: {path_of_image}")
@@ -109,12 +110,28 @@ def combine_two_frame(frame1, frame2):
     return cv2.add(frame1, frame2)
 
 
-def display_a_frame(frame):
-    logging.debug(f"\n\ndisplay_a_frame with a shape of {frame.shape}")
-    # plt.title('Made by yingshaoxo')
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    plt.imshow(frame)
-    plt.xticks([]), plt.yticks([])
+def display(*frames):
+    """
+    Display a list of images in a single figure with matplotlib.
+
+    Parameters
+    ---------
+    images: List of frames(np.arrays)
+    """
+    images = list(frames)
+    cols = 1
+
+    n_images = len(images)
+    titles = ['Image (%d)' % i for i in range(1, n_images + 1)]
+    fig = plt.figure()
+    for n, (image, title) in enumerate(zip(images, titles)):
+        a = fig.add_subplot(cols, np.ceil(n_images/float(cols)), n + 1)
+        if image.ndim == 2:
+            plt.gray()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        plt.imshow(image)
+        a.set_title(title)
+    fig.set_size_inches(np.array(fig.get_size_inches()) * n_images)
     plt.show()
 
 
@@ -134,8 +151,8 @@ def get_human_and_background_masks_from_a_frame(frame):
     # visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], r['scores'])
 
     # print(r['class_ids'])
-    if (__class_names.index("person") in r['class_ids']):
-        a_tuple = np.where(r['class_ids'] == __class_names.index("person"))
+    if (_class_names.index("person") in r['class_ids']):
+        a_tuple = np.where(r['class_ids'] == _class_names.index("person"))
         index_array = a_tuple[0]
 
         # print(r['masks'].shape) # The shape is strange, you should see function display_instances() in visualize.py for more details
@@ -255,8 +272,7 @@ def effect_of_blur_for_face(frame, kernel=9):
     return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)
 
 
-def effect_of_whitening(frame, value=30):
-    # return Gingham(frame)
+def effect_of_brighter(frame, value=30):
     img = frame
     imgInfo = img.shape
     height = imgInfo[0]
@@ -277,13 +293,24 @@ def effect_of_whitening(frame, value=30):
                     rr = 255
                 dst[i, j] = (bb, gg, rr)
     return dst
+    """
+    frame = np.uint8(np.log1p(frame))
+    thresh = rate
+    frame = cv2.threshold(frame, thresh, 255, cv2.THRESH_BINARY)[1]
+    frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX, dtype = cv2.CV_8U)
+    return frame
+    """
+
+
+def effect_of_whitening(frame):
+    return frame
 
 
 def effect_of_oil_painting(frame):
-    PIL_image = __opencv_frame_to_PIL_image(frame)
+    PIL_image = _opencv_frame_to_PIL_image(frame)
     # PIL_image = oil_painting(PIL_image, 8, 255)
     PIL_image = oil_painting(PIL_image, 8, 255)
-    frame = __PIL_image_to_opencv_frame(PIL_image)
+    frame = _PIL_image_to_opencv_frame(PIL_image)
     return frame
 
 

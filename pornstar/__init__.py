@@ -1,8 +1,8 @@
-from .__main import (
+from ._main import (
     terminal,
     read_image_as_a_frame,
     combine_two_frame,
-    display_a_frame,
+    display,
     save_a_frame_as_an_image,
     get_masked_image,
     get_human_and_background_masks_from_a_frame,
@@ -13,6 +13,7 @@ from .__main import (
     effect_of_blur,
     effect_of_blur_for_face,
     effect_of_pure_white,
+    effect_of_brighter,
     effect_of_whitening,
     effect_of_oil_painting,
     process_video,
@@ -20,4 +21,4 @@ from .__main import (
 )
 
 
-#from .__main import *
+#from ._main import *

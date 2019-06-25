@@ -23,7 +23,7 @@ import keras.layers as KL
 import keras.engine as KE
 import keras.models as KM
 
-from .__utils import batch_slice, box_refinement_graph, resize_image, resize_mask, compute_iou, extract_bboxes, minimize_mask, box_refinement, resize, norm_boxes, compute_overlaps, unmold_mask, generate_pyramid_anchors, denorm_boxes
+from ._utils import batch_slice, box_refinement_graph, resize_image, resize_mask, compute_iou, extract_bboxes, minimize_mask, box_refinement, resize, norm_boxes, compute_overlaps, unmold_mask, generate_pyramid_anchors, denorm_boxes
 
 # Requires TensorFlow 1.3+ and Keras 2.0.8+.
 from distutils.version import LooseVersion

@@ -3,18 +3,20 @@ sys.path.append('..')
 
 import pornstar
 
-file_name = "girl"
+file_name = "couple"
 input_img = f"./{file_name}.png"
 output_img = f"~/Desktop/{file_name}.png"
 
-frame = pornstar.read_image_as_a_frame(input_img)
+raw = pornstar.read_image_as_a_frame(input_img)
 
-frame = pornstar.stylize_background(
-    frame,
-    stylize_function_list=[pornstar.effect_of_blur]
-)
+frame = raw
 
-pornstar.display_a_frame(frame)
+frame = pornstar.stylize_background_and_human_body(
+            frame,
+            human_body_stylize_function_list = [pornstar.effect_of_whitening]
+        )
+
+pornstar.display(raw, frame)
 pornstar.save_a_frame_as_an_image(
     pornstar.terminal.fix_path(output_img),
     frame

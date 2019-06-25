@@ -4,18 +4,20 @@ from auto_everything.base import Python, Terminal
 py = Python()
 t = Terminal()
 
+
 class Tools():
     def checklogs(self):
-        path_of_log_file = t.fix_path("~/Pornstar/__main.log")
+        path_of_log_file = t.fix_path("~/Pornstar/_main.log")
         t.run(f"tail -F {path_of_log_file}")
 
     def compile(self):
         commands = """
-python3 -m nuitka --module pornstar --include-package=pornstar.__utils,pornstar.__model,pornstar.__coco,pornstar.__config,pornstar.__main,pornstar.__PIL_filters,__CV2_filters --output-dir=build
+python3 -m nuitka --module pornstar --include-package=pornstar._utils,pornstar._model,pornstar._coco,pornstar._config,pornstar._main,pornstar._PIL_filters,_CV2_filters --output-dir=build
         """
         t.run(commands)
 
     def push(self, comment):
+        self.make_docs()
         t.run('git add .')
         t.run('git commit -m "{}"'.format(comment))
         t.run('git push origin')
@@ -31,13 +33,24 @@ git reset --hard origin/master
 git reset --hard HEAD^
 """)
 
+    def make_docs(self):
+        t.run("""
+mkdir docs
+rm docs/* -fr
+pdoc --html --output-dir docs pornstar._main 
+mv docs/pornstar/_main.html docs/index.html
+rm docs/pornstar -fr
+        """)
+
     def publish(self):
+        self.make_docs()
         t.run("""
 sudo rm -fr dist
 sudo rm -fr build
 sudo -H python3 setup.py sdist bdist_wheel
 twine upload dist/*
 """)
+
 
 py.make_it_runnable()
 py.fire(Tools)
