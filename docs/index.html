@@ -24,10 +24,12 @@
 <summary>Source code</summary>
 <pre><code class="python"># coding: utf-8
 
+import dlib
 import logging
 from ._coco import CocoConfig as _CocoConfig
 from ._model import MaskRCNN as _MaskRCNN
 from ._utils import download_trained_weights as _download_trained_weights
+from ._utils import download_dlib_shape_predictor as _download_dlib_shape_predictor
 from ._PIL_filters import oil_painting
 from ._CV2_filters import Gingham
 
@@ -52,6 +54,15 @@ if not terminal.exists(ROOT_DIR):
 
 logging.basicConfig(filename=os.path.join(ROOT_DIR, &#34;_main.log&#34;),
                     level=logging.DEBUG, filemode=&#39;w&#39;, format=&#39;%(levelname)s - %(message)s&#39;)
+
+
+# init dlib
+face_detector = dlib.get_frontal_face_detector()
+DLIB_SHAPE_PREDICTOR_PATH = os.path.join(
+    ROOT_DIR, &#34;shape_predictor_68_face_landmarks.dat&#34;)
+if not os.path.exists(DLIB_SHAPE_PREDICTOR_PATH):
+    _download_dlib_shape_predictor(DLIB_SHAPE_PREDICTOR_PATH)
+face_predictor = dlib.shape_predictor(DLIB_SHAPE_PREDICTOR_PATH)
 
 
 class _InferenceConfig(_CocoConfig):
@@ -92,20 +103,20 @@ def _init_model():
 # Index of the class in the list is its ID. For example, to get ID of
 # the teddy bear class, use: class_names.index(&#39;teddy bear&#39;)
 _class_names = [&#39;BG&#39;, &#39;person&#39;, &#39;bicycle&#39;, &#39;car&#39;, &#39;motorcycle&#39;, &#39;airplane&#39;,
-                 &#39;bus&#39;, &#39;train&#39;, &#39;truck&#39;, &#39;boat&#39;, &#39;traffic light&#39;,
-                 &#39;fire hydrant&#39;, &#39;stop sign&#39;, &#39;parking meter&#39;, &#39;bench&#39;, &#39;bird&#39;,
-                 &#39;cat&#39;, &#39;dog&#39;, &#39;horse&#39;, &#39;sheep&#39;, &#39;cow&#39;, &#39;elephant&#39;, &#39;bear&#39;,
-                 &#39;zebra&#39;, &#39;giraffe&#39;, &#39;backpack&#39;, &#39;umbrella&#39;, &#39;handbag&#39;, &#39;tie&#39;,
-                 &#39;suitcase&#39;, &#39;frisbee&#39;, &#39;skis&#39;, &#39;snowboard&#39;, &#39;sports ball&#39;,
-                 &#39;kite&#39;, &#39;baseball bat&#39;, &#39;baseball glove&#39;, &#39;skateboard&#39;,
-                 &#39;surfboard&#39;, &#39;tennis racket&#39;, &#39;bottle&#39;, &#39;wine glass&#39;, &#39;cup&#39;,
-                 &#39;fork&#39;, &#39;knife&#39;, &#39;spoon&#39;, &#39;bowl&#39;, &#39;banana&#39;, &#39;apple&#39;,
-                 &#39;sandwich&#39;, &#39;orange&#39;, &#39;broccoli&#39;, &#39;carrot&#39;, &#39;hot dog&#39;, &#39;pizza&#39;,
-                 &#39;donut&#39;, &#39;cake&#39;, &#39;chair&#39;, &#39;couch&#39;, &#39;potted plant&#39;, &#39;bed&#39;,
-                 &#39;dining table&#39;, &#39;toilet&#39;, &#39;tv&#39;, &#39;laptop&#39;, &#39;mouse&#39;, &#39;remote&#39;,
-                 &#39;keyboard&#39;, &#39;cell phone&#39;, &#39;microwave&#39;, &#39;oven&#39;, &#39;toaster&#39;,
-                 &#39;sink&#39;, &#39;refrigerator&#39;, &#39;book&#39;, &#39;clock&#39;, &#39;vase&#39;, &#39;scissors&#39;,
-                 &#39;teddy bear&#39;, &#39;hair drier&#39;, &#39;toothbrush&#39;]
+                &#39;bus&#39;, &#39;train&#39;, &#39;truck&#39;, &#39;boat&#39;, &#39;traffic light&#39;,
+                &#39;fire hydrant&#39;, &#39;stop sign&#39;, &#39;parking meter&#39;, &#39;bench&#39;, &#39;bird&#39;,
+                &#39;cat&#39;, &#39;dog&#39;, &#39;horse&#39;, &#39;sheep&#39;, &#39;cow&#39;, &#39;elephant&#39;, &#39;bear&#39;,
+                &#39;zebra&#39;, &#39;giraffe&#39;, &#39;backpack&#39;, &#39;umbrella&#39;, &#39;handbag&#39;, &#39;tie&#39;,
+                &#39;suitcase&#39;, &#39;frisbee&#39;, &#39;skis&#39;, &#39;snowboard&#39;, &#39;sports ball&#39;,
+                &#39;kite&#39;, &#39;baseball bat&#39;, &#39;baseball glove&#39;, &#39;skateboard&#39;,
+                &#39;surfboard&#39;, &#39;tennis racket&#39;, &#39;bottle&#39;, &#39;wine glass&#39;, &#39;cup&#39;,
+                &#39;fork&#39;, &#39;knife&#39;, &#39;spoon&#39;, &#39;bowl&#39;, &#39;banana&#39;, &#39;apple&#39;,
+                &#39;sandwich&#39;, &#39;orange&#39;, &#39;broccoli&#39;, &#39;carrot&#39;, &#39;hot dog&#39;, &#39;pizza&#39;,
+                &#39;donut&#39;, &#39;cake&#39;, &#39;chair&#39;, &#39;couch&#39;, &#39;potted plant&#39;, &#39;bed&#39;,
+                &#39;dining table&#39;, &#39;toilet&#39;, &#39;tv&#39;, &#39;laptop&#39;, &#39;mouse&#39;, &#39;remote&#39;,
+                &#39;keyboard&#39;, &#39;cell phone&#39;, &#39;microwave&#39;, &#39;oven&#39;, &#39;toaster&#39;,
+                &#39;sink&#39;, &#39;refrigerator&#39;, &#39;book&#39;, &#39;clock&#39;, &#39;vase&#39;, &#39;scissors&#39;,
+                &#39;teddy bear&#39;, &#39;hair drier&#39;, &#39;toothbrush&#39;]
 
 
 model = _init_model()
@@ -233,7 +244,10 @@ def stylize_human_body(frame, stylize_function_list=None):
         background = get_masked_image(frame, background_mask)
         person = get_masked_image(frame, person_mask)
         for stylize_function in stylize_function_list:
-            person = stylize_function(person)
+            try:
+                person = stylize_function(person, target_mask=person_mask)
+            except TypeError as e:
+                person = stylize_function(person)
         the_whole_img = combine_two_frame(person, background)
         return the_whole_img
     else:
@@ -292,7 +306,7 @@ def effect_of_blur(frame, kernel=None, method=1):
         return cv2.medianBlur(frame, kernel)
 
 
-def effect_of_blur_for_face(frame, kernel=9):
+def effect_of_blur_for_skin(frame, kernel=9):
     return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)
 
 
@@ -317,31 +331,88 @@ def effect_of_brighter(frame, value=30):
                     rr = 255
                 dst[i, j] = (bb, gg, rr)
     return dst
+
+
+def _is_this_rgb_belong_to_skin(r, g, b):
+    # Useless
+    if ((b &gt; 95 and g &gt; 40 and r &gt; 20 and b-r &gt; 15 and b-g &gt; 15) or (b &gt; 200 and g &gt; 210 and r &gt; 170 and abs(b-r) &lt;= 15 and b &gt; r and g &gt; r)):
+        return True
+    else:
+        return False
     &#34;&#34;&#34;
-    frame = np.uint8(np.log1p(frame))
-    thresh = rate
-    frame = cv2.threshold(frame, thresh, 255, cv2.THRESH_BINARY)[1]
-    frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX, dtype = cv2.CV_8U)
-    return frame
+    # get skin mask
+    lower = np.array([0, 48, 80], dtype=&#34;uint8&#34;)
+    upper = np.array([20, 255, 255], dtype=&#34;uint8&#34;)
+
+    converted = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    skinMask = cv2.inRange(converted, lower, upper)
+
+    # apply a series of erosions and dilations to the mask
+    # using an elliptical kernel
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+    skinMask = cv2.erode(skinMask, kernel, iterations=2)
+    skinMask = cv2.dilate(skinMask, kernel, iterations=2)
+
+    # blur the mask to help remove noise, then apply the
+    # mask to the frame
+    skinMask = cv2.GaussianBlur(skinMask, (3, 3), 0)
+    skin = cv2.bitwise_and(frame, frame, mask=skinMask)
+
+    return skin
     &#34;&#34;&#34;
 
 
-def effect_of_whitening(frame):
-    return frame
+def effect_of_whitening(frame, whiten_level=5.0):
+    assert 1 &lt;= whiten_level &lt;= 5, &#34;whiten_level must belongs to [1, 5]&#34;
+    a = math.log(whiten_level)
+    img = frame
+    imgInfo = img.shape
+    height = imgInfo[0]
+    width = imgInfo[1]
+    dst = np.zeros((height, width, 3), np.uint8)
+    for i in range(0, height):
+        for j in range(0, width):
+            (b, g, r) = img[i, j]
+            if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
+                # if _is_this_rgb_belong_to_skin(r, g, b):
+                rr = int(255 * (math.log((r*0.003921)*(whiten_level-1)+1)/a))
+                gg = int(255 * (math.log((g*0.003921)*(whiten_level-1)+1)/a))
+                bb = int(255 * (math.log((b*0.003921)*(whiten_level-1)+1)/a))
+                if bb &gt; 255:
+                    bb = 255
+                if gg &gt; 255:
+                    gg = 255
+                if rr &gt; 255:
+                    rr = 255
+                dst[i, j] = (bb, gg, rr)
+            else:
+                dst[i, j] = (b, g, r)
+
+    return dst
 
 
-def effect_of_oil_painting(frame):
-    PIL_image = _opencv_frame_to_PIL_image(frame)
-    # PIL_image = oil_painting(PIL_image, 8, 255)
-    PIL_image = oil_painting(PIL_image, 8, 255)
-    frame = _PIL_image_to_opencv_frame(PIL_image)
-    return frame
+&#34;&#34;&#34;
+def effect_of_whitening(frame, target_mask=None):
+    white = effect_of_pure_white(frame)
+    frame = cv2.addWeighted(white, 0.2, frame, 0.85, 0)
+    if isinstance(target_mask, np.ndarray):
+        return get_masked_image(frame, target_mask)
+    else:
+        return frame
+&#34;&#34;&#34;
 
 
 def effect_of_pure_white(frame):
     white = np.zeros((frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
     white.fill(255)
     return white
+
+
+def effect_of_oil_painting(frame):
+    PIL_image = _opencv_frame_to_PIL_image(frame)
+    PIL_image = oil_painting(PIL_image, 8, 255)
+    frame = _PIL_image_to_opencv_frame(PIL_image)
+    return frame
 
 
 def process_video(path_of_video, effect_function=None, save_to=None):
@@ -357,8 +428,6 @@ def process_video(path_of_video, effect_function=None, save_to=None):
     clip = VideoFileClip(path_of_video)
     modified_clip = clip.fl_image(effect_function)
 
-    # if terminal.exists(save_to):
-    #    os.remove(save_to)
     modified_clip.write_videofile(save_to)
 
 
@@ -373,7 +442,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
     while(True):
         ret, frame = cap.read()
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = effect_function(frame)
 
         cv2.imshow(f&#34;yingshaoxo&#39;s camera {str(device)}&#34;, frame)
@@ -463,14 +531,14 @@ def process_camera(device=0, effect_function=None, save_to=None):
         return cv2.medianBlur(frame, kernel)</code></pre>
 </details>
 </dd>
-<dt id="pornstar._main.effect_of_blur_for_face"><code class="name flex">
-<span>def <span class="ident">effect_of_blur_for_face</span></span>(<span>frame, kernel=9)</span>
+<dt id="pornstar._main.effect_of_blur_for_skin"><code class="name flex">
+<span>def <span class="ident">effect_of_blur_for_skin</span></span>(<span>frame, kernel=9)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def effect_of_blur_for_face(frame, kernel=9):
+<pre><code class="python">def effect_of_blur_for_skin(frame, kernel=9):
     return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)</code></pre>
 </details>
 </dd>
@@ -501,14 +569,7 @@ def process_camera(device=0, effect_function=None, save_to=None):
                 if rr &gt; 255:
                     rr = 255
                 dst[i, j] = (bb, gg, rr)
-    return dst
-    &#34;&#34;&#34;
-    frame = np.uint8(np.log1p(frame))
-    thresh = rate
-    frame = cv2.threshold(frame, thresh, 255, cv2.THRESH_BINARY)[1]
-    frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX, dtype = cv2.CV_8U)
-    return frame
-    &#34;&#34;&#34;</code></pre>
+    return dst</code></pre>
 </details>
 </dd>
 <dt id="pornstar._main.effect_of_oil_painting"><code class="name flex">
@@ -520,7 +581,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
 <summary>Source code</summary>
 <pre><code class="python">def effect_of_oil_painting(frame):
     PIL_image = _opencv_frame_to_PIL_image(frame)
-    # PIL_image = oil_painting(PIL_image, 8, 255)
     PIL_image = oil_painting(PIL_image, 8, 255)
     frame = _PIL_image_to_opencv_frame(PIL_image)
     return frame</code></pre>
@@ -540,14 +600,39 @@ def process_camera(device=0, effect_function=None, save_to=None):
 </details>
 </dd>
 <dt id="pornstar._main.effect_of_whitening"><code class="name flex">
-<span>def <span class="ident">effect_of_whitening</span></span>(<span>frame)</span>
+<span>def <span class="ident">effect_of_whitening</span></span>(<span>frame, whiten_level=5.0)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def effect_of_whitening(frame):
-    return frame</code></pre>
+<pre><code class="python">def effect_of_whitening(frame, whiten_level=5.0):
+    assert 1 &lt;= whiten_level &lt;= 5, &#34;whiten_level must belongs to [1, 5]&#34;
+    a = math.log(whiten_level)
+    img = frame
+    imgInfo = img.shape
+    height = imgInfo[0]
+    width = imgInfo[1]
+    dst = np.zeros((height, width, 3), np.uint8)
+    for i in range(0, height):
+        for j in range(0, width):
+            (b, g, r) = img[i, j]
+            if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
+                # if _is_this_rgb_belong_to_skin(r, g, b):
+                rr = int(255 * (math.log((r*0.003921)*(whiten_level-1)+1)/a))
+                gg = int(255 * (math.log((g*0.003921)*(whiten_level-1)+1)/a))
+                bb = int(255 * (math.log((b*0.003921)*(whiten_level-1)+1)/a))
+                if bb &gt; 255:
+                    bb = 255
+                if gg &gt; 255:
+                    gg = 255
+                if rr &gt; 255:
+                    rr = 255
+                dst[i, j] = (bb, gg, rr)
+            else:
+                dst[i, j] = (b, g, r)
+
+    return dst</code></pre>
 </details>
 </dd>
 <dt id="pornstar._main.get_human_and_background_masks_from_a_frame"><code class="name flex">
@@ -622,7 +707,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
     while(True):
         ret, frame = cap.read()
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = effect_function(frame)
 
         cv2.imshow(f&#34;yingshaoxo&#39;s camera {str(device)}&#34;, frame)
@@ -653,8 +737,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
     clip = VideoFileClip(path_of_video)
     modified_clip = clip.fl_image(effect_function)
 
-    # if terminal.exists(save_to):
-    #    os.remove(save_to)
     modified_clip.write_videofile(save_to)</code></pre>
 </details>
 </dd>
@@ -760,7 +842,10 @@ def process_camera(device=0, effect_function=None, save_to=None):
         background = get_masked_image(frame, background_mask)
         person = get_masked_image(frame, person_mask)
         for stylize_function in stylize_function_list:
-            person = stylize_function(person)
+            try:
+                person = stylize_function(person, target_mask=person_mask)
+            except TypeError as e:
+                person = stylize_function(person)
         the_whole_img = combine_two_frame(person, background)
         return the_whole_img
     else:
@@ -800,7 +885,7 @@ def process_camera(device=0, effect_function=None, save_to=None):
 <li><code><a title="pornstar._main.combine_two_frame" href="#pornstar._main.combine_two_frame">combine_two_frame</a></code></li>
 <li><code><a title="pornstar._main.display" href="#pornstar._main.display">display</a></code></li>
 <li><code><a title="pornstar._main.effect_of_blur" href="#pornstar._main.effect_of_blur">effect_of_blur</a></code></li>
-<li><code><a title="pornstar._main.effect_of_blur_for_face" href="#pornstar._main.effect_of_blur_for_face">effect_of_blur_for_face</a></code></li>
+<li><code><a title="pornstar._main.effect_of_blur_for_skin" href="#pornstar._main.effect_of_blur_for_skin">effect_of_blur_for_skin</a></code></li>
 <li><code><a title="pornstar._main.effect_of_brighter" href="#pornstar._main.effect_of_brighter">effect_of_brighter</a></code></li>
 <li><code><a title="pornstar._main.effect_of_oil_painting" href="#pornstar._main.effect_of_oil_painting">effect_of_oil_painting</a></code></li>
 <li><code><a title="pornstar._main.effect_of_pure_white" href="#pornstar._main.effect_of_pure_white">effect_of_pure_white</a></code></li>
