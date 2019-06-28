@@ -11,8 +11,9 @@ raw = pornstar.read_image_as_a_frame(input_img)
 
 frame = raw
 
-frame1 = pornstar.stylize_the_whole_image(
+frame1 = pornstar.stylize_background_and_human_body(
             frame,
+            [pornstar.effect_of_blur],
             [pornstar.effect_of_whitening_with_a_top_layer]
         )
 
@@ -27,7 +28,3 @@ frame3 = pornstar.stylize_the_whole_image(
         )
 
 pornstar.display(raw, frame1, frame2, frame3)
-#pornstar.save_a_frame_as_an_image(
-#    pornstar.terminal.fix_path(output_img),
-#    frame
-#)

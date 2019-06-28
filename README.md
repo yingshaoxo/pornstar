@@ -19,6 +19,12 @@ sudo pip3 install pornstar
 See [examples](https://github.com/yingshaoxo/pornstar/tree/master/example)
 
 
+### What it can do
+* background blur
+* skin whitening
+
+![show](show.png)
+
 ### Author
 
 yingshaoxo#gmail.com
