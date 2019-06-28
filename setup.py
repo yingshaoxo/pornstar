@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, Extension, find_packages
 from os.path import dirname, join, abspath
 
 file_path = join(abspath(dirname(__file__)), "README.md")
@@ -9,8 +9,8 @@ setup(
     name='pornstar',
     version='0.2',
     description='Make you become the next porn star!',
-    long_description=long_description,
     long_description_content_type='text/markdown',
+    long_description=long_description,
     classifiers=[
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3',

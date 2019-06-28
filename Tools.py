@@ -47,6 +47,7 @@ rm docs/pornstar -fr
         t.run("""
 sudo rm -fr dist
 sudo rm -fr build
+sudo pip3 install -U twine wheel setuptools
 sudo -H python3 setup.py sdist bdist_wheel
 twine upload dist/*
 """)
