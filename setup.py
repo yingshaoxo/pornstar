@@ -7,7 +7,7 @@ with open(file_path) as f:
 
 setup(
     name='pornstar',
-    version='0.1',
+    version='0.2',
     description='Make you become the next porn star!',
     long_description=long_description,
     long_description_content_type='text/markdown',
