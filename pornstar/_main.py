@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from keras.models import load_model as _keras_load_model
+import urllib.request
 import shutil
 
 import dlib
@@ -102,8 +103,10 @@ def _init_Whitening_model():
 
     # Download it from Releases if needed
     if not os.path.exists(MODEL_PATH):
+        print(f"Start to download {MODEL_FILE_NAME}...")
         with urllib.request.urlopen("https://github.com/yingshaoxo/pornstar/raw/master/models/" + MODEL_FILE_NAME) as resp, open(MODEL_PATH, 'wb') as out:
             shutil.copyfileobj(resp, out)
+        print(f"{MODEL_FILE_NAME} was downloaded!")
 
     model = _keras_load_model(MODEL_PATH)
 
@@ -358,8 +361,8 @@ def effect_of_whitening_with_neural_network(frame, target_mask=None):
 
 def effect_of_whitening_with_a_top_layer(frame, target_mask=None):
     white = effect_of_pure_white(frame)
-    #frame = cv2.addWeighted(white, 0.2, frame, 0.85, 0)
-    frame = cv2.addWeighted(white, 0.1, frame, 0.9, 0)
+    frame = cv2.addWeighted(white, 0.2, frame, 0.85, 0)
+    #frame = cv2.addWeighted(white, 0.1, frame, 0.9, 0)
     if isinstance(target_mask, np.ndarray):
         return get_masked_image(frame, target_mask)
     else:

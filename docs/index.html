@@ -24,6 +24,10 @@
 <summary>Source code</summary>
 <pre><code class="python"># coding: utf-8
 
+from keras.models import load_model as _keras_load_model
+import urllib.request
+import shutil
+
 import dlib
 import logging
 from ._coco import CocoConfig as _CocoConfig
@@ -45,6 +49,7 @@ from pathlib import Path
 
 from auto_everything.base import Terminal
 terminal = Terminal()
+
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath(terminal.fix_path(&#34;~/Pornstar&#34;))
@@ -73,10 +78,27 @@ class _InferenceConfig(_CocoConfig):
     USE_MINI_MASK = False
 
 
-def _init_model():
-    # Import Mask RCNN
-    # Import COCO config
+# COCO Class names
+# Index of the class in the list is its ID. For example, to get ID of
+# the teddy bear class, use: class_names.index(&#39;teddy bear&#39;)
+_class_names = [&#39;BG&#39;, &#39;person&#39;, &#39;bicycle&#39;, &#39;car&#39;, &#39;motorcycle&#39;, &#39;airplane&#39;,
+                &#39;bus&#39;, &#39;train&#39;, &#39;truck&#39;, &#39;boat&#39;, &#39;traffic light&#39;,
+                &#39;fire hydrant&#39;, &#39;stop sign&#39;, &#39;parking meter&#39;, &#39;bench&#39;, &#39;bird&#39;,
+                &#39;cat&#39;, &#39;dog&#39;, &#39;horse&#39;, &#39;sheep&#39;, &#39;cow&#39;, &#39;elephant&#39;, &#39;bear&#39;,
+                &#39;zebra&#39;, &#39;giraffe&#39;, &#39;backpack&#39;, &#39;umbrella&#39;, &#39;handbag&#39;, &#39;tie&#39;,
+                &#39;suitcase&#39;, &#39;frisbee&#39;, &#39;skis&#39;, &#39;snowboard&#39;, &#39;sports ball&#39;,
+                &#39;kite&#39;, &#39;baseball bat&#39;, &#39;baseball glove&#39;, &#39;skateboard&#39;,
+                &#39;surfboard&#39;, &#39;tennis racket&#39;, &#39;bottle&#39;, &#39;wine glass&#39;, &#39;cup&#39;,
+                &#39;fork&#39;, &#39;knife&#39;, &#39;spoon&#39;, &#39;bowl&#39;, &#39;banana&#39;, &#39;apple&#39;,
+                &#39;sandwich&#39;, &#39;orange&#39;, &#39;broccoli&#39;, &#39;carrot&#39;, &#39;hot dog&#39;, &#39;pizza&#39;,
+                &#39;donut&#39;, &#39;cake&#39;, &#39;chair&#39;, &#39;couch&#39;, &#39;potted plant&#39;, &#39;bed&#39;,
+                &#39;dining table&#39;, &#39;toilet&#39;, &#39;tv&#39;, &#39;laptop&#39;, &#39;mouse&#39;, &#39;remote&#39;,
+                &#39;keyboard&#39;, &#39;cell phone&#39;, &#39;microwave&#39;, &#39;oven&#39;, &#39;toaster&#39;,
+                &#39;sink&#39;, &#39;refrigerator&#39;, &#39;book&#39;, &#39;clock&#39;, &#39;vase&#39;, &#39;scissors&#39;,
+                &#39;teddy bear&#39;, &#39;hair drier&#39;, &#39;toothbrush&#39;]
 
+
+def _init_MASK_RCNN_model():
     # Directory to save logs and trained model
     MODEL_DIR = os.path.join(ROOT_DIR, &#34;logs&#34;)
 
@@ -99,27 +121,24 @@ def _init_model():
     return model
 
 
-# COCO Class names
-# Index of the class in the list is its ID. For example, to get ID of
-# the teddy bear class, use: class_names.index(&#39;teddy bear&#39;)
-_class_names = [&#39;BG&#39;, &#39;person&#39;, &#39;bicycle&#39;, &#39;car&#39;, &#39;motorcycle&#39;, &#39;airplane&#39;,
-                &#39;bus&#39;, &#39;train&#39;, &#39;truck&#39;, &#39;boat&#39;, &#39;traffic light&#39;,
-                &#39;fire hydrant&#39;, &#39;stop sign&#39;, &#39;parking meter&#39;, &#39;bench&#39;, &#39;bird&#39;,
-                &#39;cat&#39;, &#39;dog&#39;, &#39;horse&#39;, &#39;sheep&#39;, &#39;cow&#39;, &#39;elephant&#39;, &#39;bear&#39;,
-                &#39;zebra&#39;, &#39;giraffe&#39;, &#39;backpack&#39;, &#39;umbrella&#39;, &#39;handbag&#39;, &#39;tie&#39;,
-                &#39;suitcase&#39;, &#39;frisbee&#39;, &#39;skis&#39;, &#39;snowboard&#39;, &#39;sports ball&#39;,
-                &#39;kite&#39;, &#39;baseball bat&#39;, &#39;baseball glove&#39;, &#39;skateboard&#39;,
-                &#39;surfboard&#39;, &#39;tennis racket&#39;, &#39;bottle&#39;, &#39;wine glass&#39;, &#39;cup&#39;,
-                &#39;fork&#39;, &#39;knife&#39;, &#39;spoon&#39;, &#39;bowl&#39;, &#39;banana&#39;, &#39;apple&#39;,
-                &#39;sandwich&#39;, &#39;orange&#39;, &#39;broccoli&#39;, &#39;carrot&#39;, &#39;hot dog&#39;, &#39;pizza&#39;,
-                &#39;donut&#39;, &#39;cake&#39;, &#39;chair&#39;, &#39;couch&#39;, &#39;potted plant&#39;, &#39;bed&#39;,
-                &#39;dining table&#39;, &#39;toilet&#39;, &#39;tv&#39;, &#39;laptop&#39;, &#39;mouse&#39;, &#39;remote&#39;,
-                &#39;keyboard&#39;, &#39;cell phone&#39;, &#39;microwave&#39;, &#39;oven&#39;, &#39;toaster&#39;,
-                &#39;sink&#39;, &#39;refrigerator&#39;, &#39;book&#39;, &#39;clock&#39;, &#39;vase&#39;, &#39;scissors&#39;,
-                &#39;teddy bear&#39;, &#39;hair drier&#39;, &#39;toothbrush&#39;]
+def _init_Whitening_model():
+    MODEL_FILE_NAME = &#34;pornstar_whitening_model.h5&#34;
+    MODEL_PATH = os.path.join(ROOT_DIR, MODEL_FILE_NAME)
+
+    # Download it from Releases if needed
+    if not os.path.exists(MODEL_PATH):
+        print(f&#34;Start to download {MODEL_FILE_NAME}...&#34;)
+        with urllib.request.urlopen(&#34;https://github.com/yingshaoxo/pornstar/raw/master/models/&#34; + MODEL_FILE_NAME) as resp, open(MODEL_PATH, &#39;wb&#39;) as out:
+            shutil.copyfileobj(resp, out)
+        print(f&#34;{MODEL_FILE_NAME} was downloaded!&#34;)
+
+    model = _keras_load_model(MODEL_PATH)
+
+    return model
 
 
-model = _init_model()
+MaskRCNN_model = _init_MASK_RCNN_model()
+Whitening_model = _init_Whitening_model()
 
 
 def _opencv_frame_to_PIL_image(frame):
@@ -181,7 +200,7 @@ def get_masked_image(frame, mask):
 
 
 def get_human_and_background_masks_from_a_frame(frame):
-    results = model.detect([frame], verbose=0)
+    results = MaskRCNN_model.detect([frame], verbose=0)
     r = results[0]
     # visualize.display_instances(image, r[&#39;rois&#39;], r[&#39;masks&#39;], r[&#39;class_ids&#39;], r[&#39;scores&#39;])
 
@@ -271,7 +290,10 @@ def stylize_background_and_human_body(frame, background_stylize_function_list=No
 
         person = get_masked_image(frame, person_mask)
         for stylize_function in human_body_stylize_function_list:
-            person = stylize_function(person)
+            try:
+                person = stylize_function(person, target_mask=person_mask)
+            except TypeError as e:
+                person = stylize_function(person)
 
         the_whole_img = combine_two_frame(person, background)
         return the_whole_img
@@ -310,71 +332,16 @@ def effect_of_blur_for_skin(frame, kernel=9):
     return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)
 
 
-def effect_of_brighter(frame, value=30):
-    img = frame
-    imgInfo = img.shape
-    height = imgInfo[0]
-    width = imgInfo[1]
-    dst = np.zeros((height, width, 3), np.uint8)
-    for i in range(0, height):
-        for j in range(0, width):
-            (b, g, r) = img[i, j]
-            if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
-                bb = int(b)+value
-                gg = int(g)+value
-                rr = int(r)+value
-                if bb &gt; 255:
-                    bb = 255
-                if gg &gt; 255:
-                    gg = 255
-                if rr &gt; 255:
-                    rr = 255
-                dst[i, j] = (bb, gg, rr)
-    return dst
-
-
-def _is_this_rgb_belong_to_skin(r, g, b):
-    # Useless
-    if ((b &gt; 95 and g &gt; 40 and r &gt; 20 and b-r &gt; 15 and b-g &gt; 15) or (b &gt; 200 and g &gt; 210 and r &gt; 170 and abs(b-r) &lt;= 15 and b &gt; r and g &gt; r)):
-        return True
-    else:
-        return False
-    &#34;&#34;&#34;
-    # get skin mask
-    lower = np.array([0, 48, 80], dtype=&#34;uint8&#34;)
-    upper = np.array([20, 255, 255], dtype=&#34;uint8&#34;)
-
-    converted = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    skinMask = cv2.inRange(converted, lower, upper)
-
-    # apply a series of erosions and dilations to the mask
-    # using an elliptical kernel
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
-    skinMask = cv2.erode(skinMask, kernel, iterations=2)
-    skinMask = cv2.dilate(skinMask, kernel, iterations=2)
-
-    # blur the mask to help remove noise, then apply the
-    # mask to the frame
-    skinMask = cv2.GaussianBlur(skinMask, (3, 3), 0)
-    skin = cv2.bitwise_and(frame, frame, mask=skinMask)
-
-    return skin
-    &#34;&#34;&#34;
-
-
-def effect_of_whitening(frame, whiten_level=5.0):
+def effect_of_whitening(frame, whiten_level=5.0, target_mask=None):
     assert 1 &lt;= whiten_level &lt;= 5, &#34;whiten_level must belongs to [1, 5]&#34;
+
     a = math.log(whiten_level)
-    img = frame
-    imgInfo = img.shape
-    height = imgInfo[0]
-    width = imgInfo[1]
-    dst = np.zeros((height, width, 3), np.uint8)
+    height, width, _ = frame.shape
+    new_frame = np.zeros((height, width, 3), np.uint8)
     for i in range(0, height):
         for j in range(0, width):
-            (b, g, r) = img[i, j]
+            (b, g, r) = frame[i, j]
             if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
-                # if _is_this_rgb_belong_to_skin(r, g, b):
                 rr = int(255 * (math.log((r*0.003921)*(whiten_level-1)+1)/a))
                 gg = int(255 * (math.log((g*0.003921)*(whiten_level-1)+1)/a))
                 bb = int(255 * (math.log((b*0.003921)*(whiten_level-1)+1)/a))
@@ -384,22 +351,46 @@ def effect_of_whitening(frame, whiten_level=5.0):
                     gg = 255
                 if rr &gt; 255:
                     rr = 255
-                dst[i, j] = (bb, gg, rr)
+                new_frame[i, j] = (bb, gg, rr)
             else:
-                dst[i, j] = (b, g, r)
+                new_frame[i, j] = (b, g, r)
 
-    return dst
+    if isinstance(target_mask, np.ndarray):
+        return get_masked_image(new_frame, target_mask)
+    else:
+        return new_frame
 
 
-&#34;&#34;&#34;
-def effect_of_whitening(frame, target_mask=None):
-    white = effect_of_pure_white(frame)
-    frame = cv2.addWeighted(white, 0.2, frame, 0.85, 0)
+def effect_of_whitening_with_neural_network(frame, target_mask=None):
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    # cv2 pixel is [b, g, r] by default, we want to give it a reverse first
+    rgb_input = frame[:, :, ::-1]
+    rgb_input = rgb_input.reshape(-1, 3)
+    rgb_output = Whitening_model.predict(rgb_input)
+
+    frame = rgb_output.reshape(frame.shape)
+    frame = frame[:, :, ::-1]
+
+    frame[frame &gt; 255] = 255
+    frame = frame.astype(np.uint8)
+
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
     if isinstance(target_mask, np.ndarray):
         return get_masked_image(frame, target_mask)
     else:
         return frame
-&#34;&#34;&#34;
+
+
+def effect_of_whitening_with_a_top_layer(frame, target_mask=None):
+    white = effect_of_pure_white(frame)
+    frame = cv2.addWeighted(white, 0.2, frame, 0.85, 0)
+    #frame = cv2.addWeighted(white, 0.1, frame, 0.9, 0)
+    if isinstance(target_mask, np.ndarray):
+        return get_masked_image(frame, target_mask)
+    else:
+        return frame
 
 
 def effect_of_pure_white(frame):
@@ -542,36 +533,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
     return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)</code></pre>
 </details>
 </dd>
-<dt id="pornstar._main.effect_of_brighter"><code class="name flex">
-<span>def <span class="ident">effect_of_brighter</span></span>(<span>frame, value=30)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def effect_of_brighter(frame, value=30):
-    img = frame
-    imgInfo = img.shape
-    height = imgInfo[0]
-    width = imgInfo[1]
-    dst = np.zeros((height, width, 3), np.uint8)
-    for i in range(0, height):
-        for j in range(0, width):
-            (b, g, r) = img[i, j]
-            if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
-                bb = int(b)+value
-                gg = int(g)+value
-                rr = int(r)+value
-                if bb &gt; 255:
-                    bb = 255
-                if gg &gt; 255:
-                    gg = 255
-                if rr &gt; 255:
-                    rr = 255
-                dst[i, j] = (bb, gg, rr)
-    return dst</code></pre>
-</details>
-</dd>
 <dt id="pornstar._main.effect_of_oil_painting"><code class="name flex">
 <span>def <span class="ident">effect_of_oil_painting</span></span>(<span>frame)</span>
 </code></dt>
@@ -600,25 +561,22 @@ def process_camera(device=0, effect_function=None, save_to=None):
 </details>
 </dd>
 <dt id="pornstar._main.effect_of_whitening"><code class="name flex">
-<span>def <span class="ident">effect_of_whitening</span></span>(<span>frame, whiten_level=5.0)</span>
+<span>def <span class="ident">effect_of_whitening</span></span>(<span>frame, whiten_level=5.0, target_mask=None)</span>
 </code></dt>
 <dd>
 <section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def effect_of_whitening(frame, whiten_level=5.0):
+<pre><code class="python">def effect_of_whitening(frame, whiten_level=5.0, target_mask=None):
     assert 1 &lt;= whiten_level &lt;= 5, &#34;whiten_level must belongs to [1, 5]&#34;
+
     a = math.log(whiten_level)
-    img = frame
-    imgInfo = img.shape
-    height = imgInfo[0]
-    width = imgInfo[1]
-    dst = np.zeros((height, width, 3), np.uint8)
+    height, width, _ = frame.shape
+    new_frame = np.zeros((height, width, 3), np.uint8)
     for i in range(0, height):
         for j in range(0, width):
-            (b, g, r) = img[i, j]
+            (b, g, r) = frame[i, j]
             if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
-                # if _is_this_rgb_belong_to_skin(r, g, b):
                 rr = int(255 * (math.log((r*0.003921)*(whiten_level-1)+1)/a))
                 gg = int(255 * (math.log((g*0.003921)*(whiten_level-1)+1)/a))
                 bb = int(255 * (math.log((b*0.003921)*(whiten_level-1)+1)/a))
@@ -628,11 +586,60 @@ def process_camera(device=0, effect_function=None, save_to=None):
                     gg = 255
                 if rr &gt; 255:
                     rr = 255
-                dst[i, j] = (bb, gg, rr)
+                new_frame[i, j] = (bb, gg, rr)
             else:
-                dst[i, j] = (b, g, r)
+                new_frame[i, j] = (b, g, r)
 
-    return dst</code></pre>
+    if isinstance(target_mask, np.ndarray):
+        return get_masked_image(new_frame, target_mask)
+    else:
+        return new_frame</code></pre>
+</details>
+</dd>
+<dt id="pornstar._main.effect_of_whitening_with_a_top_layer"><code class="name flex">
+<span>def <span class="ident">effect_of_whitening_with_a_top_layer</span></span>(<span>frame, target_mask=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def effect_of_whitening_with_a_top_layer(frame, target_mask=None):
+    white = effect_of_pure_white(frame)
+    frame = cv2.addWeighted(white, 0.2, frame, 0.85, 0)
+    #frame = cv2.addWeighted(white, 0.1, frame, 0.9, 0)
+    if isinstance(target_mask, np.ndarray):
+        return get_masked_image(frame, target_mask)
+    else:
+        return frame</code></pre>
+</details>
+</dd>
+<dt id="pornstar._main.effect_of_whitening_with_neural_network"><code class="name flex">
+<span>def <span class="ident">effect_of_whitening_with_neural_network</span></span>(<span>frame, target_mask=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def effect_of_whitening_with_neural_network(frame, target_mask=None):
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    # cv2 pixel is [b, g, r] by default, we want to give it a reverse first
+    rgb_input = frame[:, :, ::-1]
+    rgb_input = rgb_input.reshape(-1, 3)
+    rgb_output = Whitening_model.predict(rgb_input)
+
+    frame = rgb_output.reshape(frame.shape)
+    frame = frame[:, :, ::-1]
+
+    frame[frame &gt; 255] = 255
+    frame = frame.astype(np.uint8)
+
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+    if isinstance(target_mask, np.ndarray):
+        return get_masked_image(frame, target_mask)
+    else:
+        return frame</code></pre>
 </details>
 </dd>
 <dt id="pornstar._main.get_human_and_background_masks_from_a_frame"><code class="name flex">
@@ -643,7 +650,7 @@ def process_camera(device=0, effect_function=None, save_to=None):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def get_human_and_background_masks_from_a_frame(frame):
-    results = model.detect([frame], verbose=0)
+    results = MaskRCNN_model.detect([frame], verbose=0)
     r = results[0]
     # visualize.display_instances(image, r[&#39;rois&#39;], r[&#39;masks&#39;], r[&#39;class_ids&#39;], r[&#39;scores&#39;])
 
@@ -817,7 +824,10 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
         person = get_masked_image(frame, person_mask)
         for stylize_function in human_body_stylize_function_list:
-            person = stylize_function(person)
+            try:
+                person = stylize_function(person, target_mask=person_mask)
+            except TypeError as e:
+                person = stylize_function(person)
 
         the_whole_img = combine_two_frame(person, background)
         return the_whole_img
@@ -886,10 +896,11 @@ def process_camera(device=0, effect_function=None, save_to=None):
 <li><code><a title="pornstar._main.display" href="#pornstar._main.display">display</a></code></li>
 <li><code><a title="pornstar._main.effect_of_blur" href="#pornstar._main.effect_of_blur">effect_of_blur</a></code></li>
 <li><code><a title="pornstar._main.effect_of_blur_for_skin" href="#pornstar._main.effect_of_blur_for_skin">effect_of_blur_for_skin</a></code></li>
-<li><code><a title="pornstar._main.effect_of_brighter" href="#pornstar._main.effect_of_brighter">effect_of_brighter</a></code></li>
 <li><code><a title="pornstar._main.effect_of_oil_painting" href="#pornstar._main.effect_of_oil_painting">effect_of_oil_painting</a></code></li>
 <li><code><a title="pornstar._main.effect_of_pure_white" href="#pornstar._main.effect_of_pure_white">effect_of_pure_white</a></code></li>
 <li><code><a title="pornstar._main.effect_of_whitening" href="#pornstar._main.effect_of_whitening">effect_of_whitening</a></code></li>
+<li><code><a title="pornstar._main.effect_of_whitening_with_a_top_layer" href="#pornstar._main.effect_of_whitening_with_a_top_layer">effect_of_whitening_with_a_top_layer</a></code></li>
+<li><code><a title="pornstar._main.effect_of_whitening_with_neural_network" href="#pornstar._main.effect_of_whitening_with_neural_network">effect_of_whitening_with_neural_network</a></code></li>
 <li><code><a title="pornstar._main.get_human_and_background_masks_from_a_frame" href="#pornstar._main.get_human_and_background_masks_from_a_frame">get_human_and_background_masks_from_a_frame</a></code></li>
 <li><code><a title="pornstar._main.get_masked_image" href="#pornstar._main.get_masked_image">get_masked_image</a></code></li>
 <li><code><a title="pornstar._main.process_camera" href="#pornstar._main.process_camera">process_camera</a></code></li>
