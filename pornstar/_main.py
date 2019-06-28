@@ -1,9 +1,11 @@
 # coding: utf-8
 
+import dlib
 import logging
 from ._coco import CocoConfig as _CocoConfig
 from ._model import MaskRCNN as _MaskRCNN
 from ._utils import download_trained_weights as _download_trained_weights
+from ._utils import download_dlib_shape_predictor as _download_dlib_shape_predictor
 from ._PIL_filters import oil_painting
 from ._CV2_filters import Gingham
 
@@ -28,6 +30,15 @@ if not terminal.exists(ROOT_DIR):
 
 logging.basicConfig(filename=os.path.join(ROOT_DIR, "_main.log"),
                     level=logging.DEBUG, filemode='w', format='%(levelname)s - %(message)s')
+
+
+# init dlib
+face_detector = dlib.get_frontal_face_detector()
+DLIB_SHAPE_PREDICTOR_PATH = os.path.join(
+    ROOT_DIR, "shape_predictor_68_face_landmarks.dat")
+if not os.path.exists(DLIB_SHAPE_PREDICTOR_PATH):
+    _download_dlib_shape_predictor(DLIB_SHAPE_PREDICTOR_PATH)
+face_predictor = dlib.shape_predictor(DLIB_SHAPE_PREDICTOR_PATH)
 
 
 class _InferenceConfig(_CocoConfig):
@@ -68,20 +79,20 @@ def _init_model():
 # Index of the class in the list is its ID. For example, to get ID of
 # the teddy bear class, use: class_names.index('teddy bear')
 _class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
-                 'bus', 'train', 'truck', 'boat', 'traffic light',
-                 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird',
-                 'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear',
-                 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie',
-                 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-                 'kite', 'baseball bat', 'baseball glove', 'skateboard',
-                 'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup',
-                 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-                 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
-                 'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed',
-                 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote',
-                 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster',
-                 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
-                 'teddy bear', 'hair drier', 'toothbrush']
+                'bus', 'train', 'truck', 'boat', 'traffic light',
+                'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird',
+                'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear',
+                'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie',
+                'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
+                'kite', 'baseball bat', 'baseball glove', 'skateboard',
+                'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup',
+                'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+                'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
+                'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed',
+                'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote',
+                'keyboard', 'cell phone', 'microwave', 'oven', 'toaster',
+                'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
+                'teddy bear', 'hair drier', 'toothbrush']
 
 
 model = _init_model()
@@ -209,7 +220,10 @@ def stylize_human_body(frame, stylize_function_list=None):
         background = get_masked_image(frame, background_mask)
         person = get_masked_image(frame, person_mask)
         for stylize_function in stylize_function_list:
-            person = stylize_function(person)
+            try:
+                person = stylize_function(person, target_mask=person_mask)
+            except TypeError as e:
+                person = stylize_function(person)
         the_whole_img = combine_two_frame(person, background)
         return the_whole_img
     else:
@@ -268,7 +282,7 @@ def effect_of_blur(frame, kernel=None, method=1):
         return cv2.medianBlur(frame, kernel)
 
 
-def effect_of_blur_for_face(frame, kernel=9):
+def effect_of_blur_for_skin(frame, kernel=9):
     return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)
 
 
@@ -293,31 +307,88 @@ def effect_of_brighter(frame, value=30):
                     rr = 255
                 dst[i, j] = (bb, gg, rr)
     return dst
+
+
+def _is_this_rgb_belong_to_skin(r, g, b):
+    # Useless
+    if ((b > 95 and g > 40 and r > 20 and b-r > 15 and b-g > 15) or (b > 200 and g > 210 and r > 170 and abs(b-r) <= 15 and b > r and g > r)):
+        return True
+    else:
+        return False
     """
-    frame = np.uint8(np.log1p(frame))
-    thresh = rate
-    frame = cv2.threshold(frame, thresh, 255, cv2.THRESH_BINARY)[1]
-    frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX, dtype = cv2.CV_8U)
-    return frame
+    # get skin mask
+    lower = np.array([0, 48, 80], dtype="uint8")
+    upper = np.array([20, 255, 255], dtype="uint8")
+
+    converted = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    skinMask = cv2.inRange(converted, lower, upper)
+
+    # apply a series of erosions and dilations to the mask
+    # using an elliptical kernel
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
+    skinMask = cv2.erode(skinMask, kernel, iterations=2)
+    skinMask = cv2.dilate(skinMask, kernel, iterations=2)
+
+    # blur the mask to help remove noise, then apply the
+    # mask to the frame
+    skinMask = cv2.GaussianBlur(skinMask, (3, 3), 0)
+    skin = cv2.bitwise_and(frame, frame, mask=skinMask)
+
+    return skin
     """
 
 
-def effect_of_whitening(frame):
-    return frame
+def effect_of_whitening(frame, whiten_level=5.0):
+    assert 1 <= whiten_level <= 5, "whiten_level must belongs to [1, 5]"
+    a = math.log(whiten_level)
+    img = frame
+    imgInfo = img.shape
+    height = imgInfo[0]
+    width = imgInfo[1]
+    dst = np.zeros((height, width, 3), np.uint8)
+    for i in range(0, height):
+        for j in range(0, width):
+            (b, g, r) = img[i, j]
+            if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
+                # if _is_this_rgb_belong_to_skin(r, g, b):
+                rr = int(255 * (math.log((r*0.003921)*(whiten_level-1)+1)/a))
+                gg = int(255 * (math.log((g*0.003921)*(whiten_level-1)+1)/a))
+                bb = int(255 * (math.log((b*0.003921)*(whiten_level-1)+1)/a))
+                if bb > 255:
+                    bb = 255
+                if gg > 255:
+                    gg = 255
+                if rr > 255:
+                    rr = 255
+                dst[i, j] = (bb, gg, rr)
+            else:
+                dst[i, j] = (b, g, r)
+
+    return dst
 
 
-def effect_of_oil_painting(frame):
-    PIL_image = _opencv_frame_to_PIL_image(frame)
-    # PIL_image = oil_painting(PIL_image, 8, 255)
-    PIL_image = oil_painting(PIL_image, 8, 255)
-    frame = _PIL_image_to_opencv_frame(PIL_image)
-    return frame
+"""
+def effect_of_whitening(frame, target_mask=None):
+    white = effect_of_pure_white(frame)
+    frame = cv2.addWeighted(white, 0.2, frame, 0.85, 0)
+    if isinstance(target_mask, np.ndarray):
+        return get_masked_image(frame, target_mask)
+    else:
+        return frame
+"""
 
 
 def effect_of_pure_white(frame):
     white = np.zeros((frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
     white.fill(255)
     return white
+
+
+def effect_of_oil_painting(frame):
+    PIL_image = _opencv_frame_to_PIL_image(frame)
+    PIL_image = oil_painting(PIL_image, 8, 255)
+    frame = _PIL_image_to_opencv_frame(PIL_image)
+    return frame
 
 
 def process_video(path_of_video, effect_function=None, save_to=None):
@@ -333,8 +404,6 @@ def process_video(path_of_video, effect_function=None, save_to=None):
     clip = VideoFileClip(path_of_video)
     modified_clip = clip.fl_image(effect_function)
 
-    # if terminal.exists(save_to):
-    #    os.remove(save_to)
     modified_clip.write_videofile(save_to)
 
 
@@ -349,7 +418,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
     while(True):
         ret, frame = cap.read()
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = effect_function(frame)
 
         cv2.imshow(f"yingshaoxo's camera {str(device)}", frame)

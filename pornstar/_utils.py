@@ -23,9 +23,29 @@ import shutil
 import warnings
 from distutils.version import LooseVersion
 
+import bz2
+
 # URL from which to download the latest COCO trained weights
 COCO_MODEL_URL = "https://github.com/matterport/Mask_RCNN/releases/download/v2.0/mask_rcnn_coco.h5"
+dlib_shape_predictor_68_face_landmarks = "https://github.com/davisking/dlib-models/raw/master/shape_predictor_68_face_landmarks.dat.bz2"
 
+def download_dlib_shape_predictor(save_to, verbose=1):
+    """Download dlib shape predictor from Releases.
+    """
+    if verbose > 0:
+        print("Downloading dlib shape predictor to " + save_to + " ...")
+    bz2_file = save_to + ".bz2"
+    if not os.path.exists(bz2_file):
+        with urllib.request.urlopen(dlib_shape_predictor_68_face_landmarks) as resp, open(bz2_file, 'wb') as out:
+            shutil.copyfileobj(resp, out)
+    with open(bz2_file, "rb") as stream:
+        compressed_data = stream.read()
+    obj = bz2.BZ2Decompressor()
+    data = obj.decompress(compressed_data)
+    with open(save_to, "wb") as stream:
+        stream.write(data)
+    if verbose > 0:
+        print("... done downloading dlib shape predictor!")
 
 ############################################################
 #  Bounding Boxes
