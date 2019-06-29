@@ -152,7 +152,19 @@ def display(*frames):
     cols = 1
 
     n_images = len(images)
-    titles = ['Image (%d)' % i for i in range(1, n_images + 1)]
+
+    types = [isinstance(item, tuple) for item in images]
+    if all(types):
+        real_images = []
+        titles = []
+        for item in images:
+            assert isinstance(item[0], str) and isinstance(item[1], np.ndarray), "You should give me something like (title_string, numpy_array_frame)"
+            titles.append(item[0])
+            real_images.append(item[1])
+        images = real_images
+    else:
+        titles = ['Image (%d)' % i for i in range(1, n_images + 1)]
+
     fig = plt.figure()
     for n, (image, title) in enumerate(zip(images, titles)):
         a = fig.add_subplot(cols, np.ceil(n_images/float(cols)), n + 1)
@@ -311,16 +323,20 @@ def effect_of_blur_for_skin(frame, kernel=9):
 def effect_of_whitening(frame, whiten_level=5.0, target_mask=None):
     assert 1 <= whiten_level <= 5, "whiten_level must belongs to [1, 5]"
 
+    magic_number = 0.003921
     a = math.log(whiten_level)
+    new_frame = (255 * (np.log((frame * magic_number) * (whiten_level-1) + 1) / a)).astype(np.uint8)
+
+    """
     height, width, _ = frame.shape
     new_frame = np.zeros((height, width, 3), np.uint8)
     for i in range(0, height):
         for j in range(0, width):
             (b, g, r) = frame[i, j]
             if (int(b) != 0) and (int(g) != 0) and (int(r) != 0):
-                rr = int(255 * (math.log((r*0.003921)*(whiten_level-1)+1)/a))
-                gg = int(255 * (math.log((g*0.003921)*(whiten_level-1)+1)/a))
-                bb = int(255 * (math.log((b*0.003921)*(whiten_level-1)+1)/a))
+                rr = int(255 * (math.log((r*magic_number)*(whiten_level-1)+1)/a))
+                gg = int(255 * (math.log((g*magic_number)*(whiten_level-1)+1)/a))
+                bb = int(255 * (math.log((b*magic_number)*(whiten_level-1)+1)/a))
                 if bb > 255:
                     bb = 255
                 if gg > 255:
@@ -330,6 +346,7 @@ def effect_of_whitening(frame, whiten_level=5.0, target_mask=None):
                 new_frame[i, j] = (bb, gg, rr)
             else:
                 new_frame[i, j] = (b, g, r)
+    """
 
     if isinstance(target_mask, np.ndarray):
         return get_masked_image(new_frame, target_mask)
@@ -352,6 +369,8 @@ def effect_of_whitening_with_neural_network(frame, target_mask=None):
     frame = frame.astype(np.uint8)
 
     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+    # try to ignore rgb=0,0,0 if possible
 
     if isinstance(target_mask, np.ndarray):
         return get_masked_image(frame, target_mask)

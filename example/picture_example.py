@@ -27,4 +27,9 @@ frame3 = pornstar.stylize_the_whole_image(
             [pornstar.effect_of_whitening_with_neural_network]
         )
 
-pornstar.display(raw, frame1, frame2, frame3)
+pornstar.display(
+        ("raw", raw), 
+        ("top_layer", frame1), 
+        ("traditional algorithm", frame2), 
+        ("neural_network", frame3)
+)

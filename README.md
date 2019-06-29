@@ -7,6 +7,7 @@ A Python library to make you become the next famous pornstar!
 
 ### Features
 * background blur
+* skin smooth
 * skin whitening
 
 ![show](https://github.com/yingshaoxo/pornstar/raw/master/show.png)
