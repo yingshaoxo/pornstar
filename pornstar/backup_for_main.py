@@ -1,33 +1,29 @@
 # coding: utf-8
-from auto_everything.base import Terminal
-from pathlib import Path
-from moviepy.editor import VideoFileClip
-import math
-import matplotlib.pyplot as plt
-import cv2
-import os
-import logging
-import shutil
+
+from keras.models import load_model as _keras_load_model
 import urllib.request
-from matplotlib import pyplot as plt
-from PIL import Image
+import shutil
+
+import dlib
+import logging
+from ._coco import CocoConfig as _CocoConfig
+from ._model import MaskRCNN as _MaskRCNN
+from ._utils import download_trained_weights as _download_trained_weights
+from ._utils import download_dlib_shape_predictor as _download_dlib_shape_predictor
+from ._PIL_filters import oil_painting
+from ._CV2_filters import Gingham
+
+import os
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
+from PIL import Image
+import math
 
-TENSORFLOW2 = 3 > int(tf.__version__[0]) > 1
-if TENSORFLOW2:  # tensorflow 2.0
-    from ._deeplab import Deeplabv3
-    from tensorflow.keras.models import load_model as _keras_load_model
-else:
-    from keras.models import load_model as _keras_load_model
-    from ._coco import CocoConfig as _CocoConfig
-    from ._model import MaskRCNN as _MaskRCNN
-    from ._utils import download_trained_weights as _download_trained_weights
-    from ._utils import download_dlib_shape_predictor as _download_dlib_shape_predictor
-    from ._PIL_filters import oil_painting
-    from ._CV2_filters import Gingham
+from moviepy.editor import VideoFileClip
+from pathlib import Path
 
-
+from auto_everything.base import Terminal
 terminal = Terminal()
 
 
@@ -41,122 +37,64 @@ logging.basicConfig(filename=os.path.join(ROOT_DIR, "_main.log"),
                     level=logging.DEBUG, filemode='w', format='%(levelname)s - %(message)s')
 
 
-if (TENSORFLOW2):
-    class MyDeepLab():
-        label_names = np.asarray([
-            'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
-            'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike',
-            'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tv'
-        ])
-        model = Deeplabv3(backbone='xception', OS=16)
+# init dlib
+face_detector = dlib.get_frontal_face_detector()
+DLIB_SHAPE_PREDICTOR_PATH = os.path.join(
+    ROOT_DIR, "shape_predictor_68_face_landmarks.dat")
+if not os.path.exists(DLIB_SHAPE_PREDICTOR_PATH):
+    _download_dlib_shape_predictor(DLIB_SHAPE_PREDICTOR_PATH)
+face_predictor = dlib.shape_predictor(DLIB_SHAPE_PREDICTOR_PATH)
 
-        def predict(self, image):
-            # image = np.array(Image.open(image_path)
 
-            # Generates labels using most basic setup.  Supports various image sizes.  Returns image labels in same format
-            # as original image.  Normalization matches MobileNetV2
-            trained_image_width = 512
-            mean_subtraction_value = 127.5
+class _InferenceConfig(_CocoConfig):
+    # Set batch size to 1 since we'll be running inference on
+    # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 1
+    USE_MINI_MASK = False
 
-            # resize to max dimension of images from training dataset
-            w, h, _ = image.shape
-            ratio = float(trained_image_width) / np.max([w, h])
-            resized_image = np.array(Image.fromarray(image.astype(
-                'uint8')).resize((int(ratio * h), int(ratio * w))))
 
-            # apply normalization for trained dataset images
-            resized_image = (resized_image / mean_subtraction_value) - 1.
+# COCO Class names
+# Index of the class in the list is its ID. For example, to get ID of
+# the teddy bear class, use: class_names.index('teddy bear')
+_class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
+                'bus', 'train', 'truck', 'boat', 'traffic light',
+                'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird',
+                'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear',
+                'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie',
+                'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
+                'kite', 'baseball bat', 'baseball glove', 'skateboard',
+                'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup',
+                'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+                'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
+                'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed',
+                'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote',
+                'keyboard', 'cell phone', 'microwave', 'oven', 'toaster',
+                'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
+                'teddy bear', 'hair drier', 'toothbrush']
 
-            # pad array to square image to match training imagessqueeze()
-            pad_x = int(trained_image_width - resized_image.shape[0])
-            pad_y = int(trained_image_width - resized_image.shape[1])
-            resized_image = np.pad(
-                resized_image, ((0, pad_x), (0, pad_y), (0, 0)), mode='constant')
 
-            # do prediction
-            res = self.model.predict(np.expand_dims(resized_image, 0))
-            labels = np.argmax(res.squeeze(), -1)
+def _init_MASK_RCNN_model():
+    # Directory to save logs and trained model
+    MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
-            # remove padding and resize back to original image
-            if pad_x > 0:
-                labels = labels[:-pad_x]
-            if pad_y > 0:
-                labels = labels[:, :-pad_y]
-            labels = np.array(Image.fromarray(
-                labels.astype('uint8')).resize((h, w)))
+    # Local path to trained weights file
+    COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+    # Download COCO trained weights from Releases if needed
+    if not os.path.exists(COCO_MODEL_PATH):
+        _download_trained_weights(COCO_MODEL_PATH)
 
-            return labels
+    # ## Configurations
+    config = _InferenceConfig()
+    config.display()
 
-        def get_human_mask(self, labels):
-            human_index = np.where(self.label_names == "person")[0]
-            if (human_index.size == 0):
-                return np.array([])
-            else:
-                human_index = human_index[0]
-                human_values = (labels == human_index).astype(np.uint8)
-                return np.expand_dims(human_values, axis=2)
+    # Create model object in inference mode.
+    model = _MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
 
-        def scale_up_mask(self, mask, factor=1.5):
-            if factor < 1:
-                return mask
+    # Load weights trained on MS-COCO
+    model.load_weights(COCO_MODEL_PATH, by_name=True)
 
-            old_width, old_height, _ = mask.shape
-            x = int(((factor - 1) * old_width) / 2)
-            y = int(((factor - 1) * old_height) / 2)
-
-            resized_mask = cv2.resize(mask, (0, 0), fx=factor, fy=factor)
-            resized_mask = np.expand_dims(resized_mask, axis=2)
-            cropped_mask = resized_mask[x:x+old_width, y:y+old_height].copy()
-
-            return cropped_mask
-else:
-    class _InferenceConfig(_CocoConfig):
-        # Set batch size to 1 since we'll be running inference on
-        # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-        GPU_COUNT = 1
-        IMAGES_PER_GPU = 1
-        USE_MINI_MASK = False
-
-    # COCO Class names
-    # Index of the class in the list is its ID. For example, to get ID of
-    # the teddy bear class, use: class_names.index('teddy bear')
-    _class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
-                    'bus', 'train', 'truck', 'boat', 'traffic light',
-                    'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird',
-                    'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear',
-                    'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie',
-                    'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-                    'kite', 'baseball bat', 'baseball glove', 'skateboard',
-                    'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup',
-                    'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-                    'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
-                    'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed',
-                    'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote',
-                    'keyboard', 'cell phone', 'microwave', 'oven', 'toaster',
-                    'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
-                    'teddy bear', 'hair drier', 'toothbrush']
-
-    def _init_MASK_RCNN_model():
-        # Directory to save logs and trained model
-        MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-
-        # Local path to trained weights file
-        COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
-        # Download COCO trained weights from Releases if needed
-        if not os.path.exists(COCO_MODEL_PATH):
-            _download_trained_weights(COCO_MODEL_PATH)
-
-        # ## Configurations
-        config = _InferenceConfig()
-        config.display()
-
-        # Create model object in inference mode.
-        model = _MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
-
-        # Load weights trained on MS-COCO
-        model.load_weights(COCO_MODEL_PATH, by_name=True)
-
-        return model
+    return model
 
 
 def _init_Whitening_model():
@@ -175,11 +113,7 @@ def _init_Whitening_model():
     return model
 
 
-if (TENSORFLOW2):
-    my_deeplab = MyDeepLab()
-else:
-    MaskRCNN_model = _init_MASK_RCNN_model()
-
+MaskRCNN_model = _init_MASK_RCNN_model()
 Whitening_model = _init_Whitening_model()
 
 
@@ -224,8 +158,7 @@ def display(*frames):
         real_images = []
         titles = []
         for item in images:
-            assert isinstance(item[0], str) and isinstance(
-                item[1], np.ndarray), "You should give me something like (title_string, numpy_array_frame)"
+            assert isinstance(item[0], str) and isinstance(item[1], np.ndarray), "You should give me something like (title_string, numpy_array_frame)"
             titles.append(item[0])
             real_images.append(item[1])
         images = real_images
@@ -255,47 +188,38 @@ def get_masked_image(frame, mask):
 
 
 def get_human_and_background_masks_from_a_frame(frame):
-    if (TENSORFLOW2):
-        results = my_deeplab.predict(frame)
-        results = my_deeplab.get_human_mask(results)
-        if (results.size == 0):
-            return None, None
-        else:
-            #results = my_deeplab.scale_up_mask(results)
-            return results, np.logical_not(results)
-    else:
-        results = MaskRCNN_model.detect([frame], verbose=0)
-        r = results[0]
-        # visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], r['scores'])
+    results = MaskRCNN_model.detect([frame], verbose=0)
+    r = results[0]
+    # visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], r['scores'])
 
-        # print(r['class_ids'])
-        if (_class_names.index("person") in r['class_ids']):
-            a_tuple = np.where(r['class_ids'] == _class_names.index("person"))
-            index_array = a_tuple[0]
+    # print(r['class_ids'])
+    if (_class_names.index("person") in r['class_ids']):
+        a_tuple = np.where(r['class_ids'] == _class_names.index("person"))
+        index_array = a_tuple[0]
 
-            # print(r['masks'].shape) # The shape is strange, you should see function display_instances() in visualize.py for more details
-            if len(index_array) > 0:
-                logging.debug(f"index_array shape: {index_array}")
-                shape = r['masks'][:, :, [0]].shape
-                logging.debug(f"original frame shape: {shape}")
-                final_mask1 = np.zeros((shape[0], shape[1], 1), dtype=np.uint8)
-                logging.debug(f"final_mask1 size: {final_mask1.shape}")
-                for index in index_array:
-                    mask = r['masks'][:, :, [index]]
-                    logging.debug(f"single mask after use index: {mask.shape}")
+        # print(r['masks'].shape) # The shape is strange, you should see function display_instances() in visualize.py for more details
+        if len(index_array) > 0:
+            logging.debug(f"index_array shape: {index_array}")
+            shape = r['masks'][:, :, [0]].shape
+            logging.debug(f"original frame shape: {shape}")
+            final_mask1 = np.zeros((shape[0], shape[1], 1), dtype=np.uint8)
+            logging.debug(f"final_mask1 size: {final_mask1.shape}")
+            for index in index_array:
+                mask = r['masks'][:, :, [index]]
+                logging.debug(f"single mask after use index: {mask.shape}")
 
-                    # non black pixel, human shape
-                    mask1 = (mask == True).astype(np.uint8)
-                    # mask2 = (mask == False).astype(np.uint8)  # black pixel, non-human shape
+                # non black pixel, human shape
+                mask1 = (mask == True).astype(np.uint8)
+                # mask2 = (mask == False).astype(np.uint8)  # black pixel, non-human shape
 
-                    logging.debug(f"mask1.shape: {mask1.shape}")
-                    # cv2.bitwise_or(final_mask1, mask1)
-                    final_mask1 = np.logical_or(final_mask1, mask1)
+                logging.debug(f"mask1.shape: {mask1.shape}")
+                # cv2.bitwise_or(final_mask1, mask1)
+                final_mask1 = np.logical_or(final_mask1, mask1)
 
-                logging.debug(f"final_mask1 size: {final_mask1.shape}\n")
-                return final_mask1, np.logical_not(final_mask1)
+            logging.debug(f"final_mask1 size: {final_mask1.shape}\n")
+            return final_mask1, np.logical_not(final_mask1)
 
-        return None, None
+    return None, None
 
 
 def stylize_background(frame, stylize_function_list=None):
@@ -401,8 +325,7 @@ def effect_of_whitening(frame, whiten_level=5.0, target_mask=None):
 
     magic_number = 0.003921
     a = math.log(whiten_level)
-    new_frame = (255 * (np.log((frame * magic_number) *
-                               (whiten_level-1) + 1) / a)).astype(np.uint8)
+    new_frame = (255 * (np.log((frame * magic_number) * (whiten_level-1) + 1) / a)).astype(np.uint8)
 
     """
     height, width, _ = frame.shape

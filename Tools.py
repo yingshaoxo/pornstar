@@ -12,7 +12,7 @@ class Tools():
 
     def compile(self):
         commands = """
-python3 -m nuitka --module pornstar --include-package=pornstar._utils,pornstar._model,pornstar._coco,pornstar._config,pornstar._main,pornstar._PIL_filters,_CV2_filters --output-dir=build
+python3 -m nuitka --module pornstar --include-package=pornstar._utils,pornstar._deeplab,pornstar._coco,pornstar._config,pornstar._main,pornstar._PIL_filters,pornstar._CV2_filters --output-dir=build
         """
         t.run(commands)
 
