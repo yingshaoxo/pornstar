@@ -237,7 +237,7 @@ class MyDlib:
                 roi.copy(), roi.copy(), mask=cv2.bitwise_not(mask))
             # Mask out the logo from the logo image.
             img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
-            img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
+            #img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
             # Update the original image with our new ROI
             bg_img[y:y+h, x:x+w] = cv2.add(img1_bg, img2_fg)
 
@@ -261,8 +261,6 @@ class MyDlib:
                 y = y - int(h * 0.05)
                 h = int(h * 1.05)
 
-                #mask_image = cv2.resize(mask_image, (w, h))
-                #frame[y:y+h, x:x+w] = mask_image
                 frame = self.add_image_to_the_top_of_another(
                     frame, mask_image, x, y, (w, h))
             self.last_frame = frame
@@ -602,6 +600,12 @@ def process_video(path_of_video, effect_function=None, save_to=None):
     if save_to == None:
         file_ = Path(path_of_video)
         save_to = file_.with_name(file_.stem + "_modified.mp4")
+    
+    def my_effect_function(frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        frame = effect_function(frame)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return frame
 
     clip = VideoFileClip(path_of_video)
     modified_clip = clip.fl_image(effect_function)

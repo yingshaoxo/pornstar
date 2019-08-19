@@ -241,28 +241,15 @@ class MyDlib:
         # apply gamma correction using the lookup table
         return cv2.LUT(image, table)
 
-    def add_image_to_the_top_of_another(self, background_img, img_to_overlay_t, x, y, overlay_size=None):
-        &#34;&#34;&#34;
-        @brief      Overlays a transparant PNG onto another image using CV2
-
-        @param      background_img    The background image
-        @param      img_to_overlay_t  The transparent image to overlay (has alpha channel)
-        @param      x                 x location to place the top-left corner of our overlay
-        @param      y                 y location to place the top-left corner of our overlay
-        @param      overlay_size      The size to scale our overlay to (tuple), no scaling if None
-
-        @return     Background image with overlay on top
-        &#34;&#34;&#34;
-
+    def add_image_to_the_top_of_another(self, background_img, top_img, x, y, overlay_size=None):
         if overlay_size is not None:
-            img_to_overlay_t = cv2.resize(
-                img_to_overlay_t.copy(), overlay_size)
-
+            top_img = cv2.resize(
+                top_img.copy(), overlay_size)
 
         bg_img = background_img.copy()
-        if (img_to_overlay_t.shape[2] == 4):  # png with transparency
+        if (top_img.shape[2] == 4):  # png with transparency
             # Extract the alpha mask of the RGBA image, convert to RGB
-            b, g, r, a = cv2.split(img_to_overlay_t)
+            b, g, r, a = cv2.split(top_img)
             overlay_color = cv2.merge((b, g, r))
             # Apply some simple filtering to remove edge noise
             mask = cv2.medianBlur(a, 5)
@@ -274,14 +261,14 @@ class MyDlib:
                 roi.copy(), roi.copy(), mask=cv2.bitwise_not(mask))
             # Mask out the logo from the logo image.
             img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
-            img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
+            #img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
             # Update the original image with our new ROI
             bg_img[y:y+h, x:x+w] = cv2.add(img1_bg, img2_fg)
 
             return bg_img
         else:  # no transparency info, just normal image
-            h, w, _ = img_to_overlay_t.shape
-            bg_img[y:y+h, x:x+w] = img_to_overlay_t
+            h, w, _ = top_img.shape
+            bg_img[y:y+h, x:x+w] = top_img
 
             return bg_img
 
@@ -298,8 +285,6 @@ class MyDlib:
                 y = y - int(h * 0.05)
                 h = int(h * 1.05)
 
-                #mask_image = cv2.resize(mask_image, (w, h))
-                #frame[y:y+h, x:x+w] = mask_image
                 frame = self.add_image_to_the_top_of_another(
                     frame, mask_image, x, y, (w, h))
             self.last_frame = frame
@@ -639,6 +624,12 @@ def process_video(path_of_video, effect_function=None, save_to=None):
     if save_to == None:
         file_ = Path(path_of_video)
         save_to = file_.with_name(file_.stem + &#34;_modified.mp4&#34;)
+    
+    def my_effect_function(frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        frame = effect_function(frame)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return frame
 
     clip = VideoFileClip(path_of_video)
     modified_clip = clip.fl_image(effect_function)
@@ -1009,6 +1000,12 @@ def process_camera(device=0, effect_function=None, save_to=None):
     if save_to == None:
         file_ = Path(path_of_video)
         save_to = file_.with_name(file_.stem + &#34;_modified.mp4&#34;)
+    
+    def my_effect_function(frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        frame = effect_function(frame)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        return frame
 
     clip = VideoFileClip(path_of_video)
     modified_clip = clip.fl_image(effect_function)
@@ -1376,28 +1373,15 @@ def process_camera(device=0, effect_function=None, save_to=None):
         # apply gamma correction using the lookup table
         return cv2.LUT(image, table)
 
-    def add_image_to_the_top_of_another(self, background_img, img_to_overlay_t, x, y, overlay_size=None):
-        &#34;&#34;&#34;
-        @brief      Overlays a transparant PNG onto another image using CV2
-
-        @param      background_img    The background image
-        @param      img_to_overlay_t  The transparent image to overlay (has alpha channel)
-        @param      x                 x location to place the top-left corner of our overlay
-        @param      y                 y location to place the top-left corner of our overlay
-        @param      overlay_size      The size to scale our overlay to (tuple), no scaling if None
-
-        @return     Background image with overlay on top
-        &#34;&#34;&#34;
-
+    def add_image_to_the_top_of_another(self, background_img, top_img, x, y, overlay_size=None):
         if overlay_size is not None:
-            img_to_overlay_t = cv2.resize(
-                img_to_overlay_t.copy(), overlay_size)
-
+            top_img = cv2.resize(
+                top_img.copy(), overlay_size)
 
         bg_img = background_img.copy()
-        if (img_to_overlay_t.shape[2] == 4):  # png with transparency
+        if (top_img.shape[2] == 4):  # png with transparency
             # Extract the alpha mask of the RGBA image, convert to RGB
-            b, g, r, a = cv2.split(img_to_overlay_t)
+            b, g, r, a = cv2.split(top_img)
             overlay_color = cv2.merge((b, g, r))
             # Apply some simple filtering to remove edge noise
             mask = cv2.medianBlur(a, 5)
@@ -1409,14 +1393,14 @@ def process_camera(device=0, effect_function=None, save_to=None):
                 roi.copy(), roi.copy(), mask=cv2.bitwise_not(mask))
             # Mask out the logo from the logo image.
             img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
-            img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
+            #img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
             # Update the original image with our new ROI
             bg_img[y:y+h, x:x+w] = cv2.add(img1_bg, img2_fg)
 
             return bg_img
         else:  # no transparency info, just normal image
-            h, w, _ = img_to_overlay_t.shape
-            bg_img[y:y+h, x:x+w] = img_to_overlay_t
+            h, w, _ = top_img.shape
+            bg_img[y:y+h, x:x+w] = top_img
 
             return bg_img
 
@@ -1433,8 +1417,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
                 y = y - int(h * 0.05)
                 h = int(h * 1.05)
 
-                #mask_image = cv2.resize(mask_image, (w, h))
-                #frame[y:y+h, x:x+w] = mask_image
                 frame = self.add_image_to_the_top_of_another(
                     frame, mask_image, x, y, (w, h))
             self.last_frame = frame
@@ -1470,8 +1452,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
             y = y - int(h * 0.05)
             h = int(h * 1.05)
 
-            #mask_image = cv2.resize(mask_image, (w, h))
-            #frame[y:y+h, x:x+w] = mask_image
             frame = self.add_image_to_the_top_of_another(
                 frame, mask_image, x, y, (w, h))
         self.last_frame = frame
@@ -1487,52 +1467,21 @@ def process_camera(device=0, effect_function=None, save_to=None):
 </details>
 </dd>
 <dt id="pornstar._main.MyDlib.add_image_to_the_top_of_another"><code class="name flex">
-<span>def <span class="ident">add_image_to_the_top_of_another</span></span>(<span>self, background_img, img_to_overlay_t, x, y, overlay_size=None)</span>
+<span>def <span class="ident">add_image_to_the_top_of_another</span></span>(<span>self, background_img, top_img, x, y, overlay_size=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>@brief
-Overlays a transparant PNG onto another image using CV2</p>
-<p>@param
-background_img
-The background image
-@param
-img_to_overlay_t
-The transparent image to overlay (has alpha channel)
-@param
-x
-x location to place the top-left corner of our overlay
-@param
-y
-y location to place the top-left corner of our overlay
-@param
-overlay_size
-The size to scale our overlay to (tuple), no scaling if None</p>
-<p>@return
-Background image with overlay on top</p></section>
+<section class="desc"></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">def add_image_to_the_top_of_another(self, background_img, img_to_overlay_t, x, y, overlay_size=None):
-    &#34;&#34;&#34;
-    @brief      Overlays a transparant PNG onto another image using CV2
-
-    @param      background_img    The background image
-    @param      img_to_overlay_t  The transparent image to overlay (has alpha channel)
-    @param      x                 x location to place the top-left corner of our overlay
-    @param      y                 y location to place the top-left corner of our overlay
-    @param      overlay_size      The size to scale our overlay to (tuple), no scaling if None
-
-    @return     Background image with overlay on top
-    &#34;&#34;&#34;
-
+<pre><code class="python">def add_image_to_the_top_of_another(self, background_img, top_img, x, y, overlay_size=None):
     if overlay_size is not None:
-        img_to_overlay_t = cv2.resize(
-            img_to_overlay_t.copy(), overlay_size)
-
+        top_img = cv2.resize(
+            top_img.copy(), overlay_size)
 
     bg_img = background_img.copy()
-    if (img_to_overlay_t.shape[2] == 4):  # png with transparency
+    if (top_img.shape[2] == 4):  # png with transparency
         # Extract the alpha mask of the RGBA image, convert to RGB
-        b, g, r, a = cv2.split(img_to_overlay_t)
+        b, g, r, a = cv2.split(top_img)
         overlay_color = cv2.merge((b, g, r))
         # Apply some simple filtering to remove edge noise
         mask = cv2.medianBlur(a, 5)
@@ -1544,14 +1493,14 @@ Background image with overlay on top</p></section>
             roi.copy(), roi.copy(), mask=cv2.bitwise_not(mask))
         # Mask out the logo from the logo image.
         img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
-        img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
+        #img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
         # Update the original image with our new ROI
         bg_img[y:y+h, x:x+w] = cv2.add(img1_bg, img2_fg)
 
         return bg_img
     else:  # no transparency info, just normal image
-        h, w, _ = img_to_overlay_t.shape
-        bg_img[y:y+h, x:x+w] = img_to_overlay_t
+        h, w, _ = top_img.shape
+        bg_img[y:y+h, x:x+w] = top_img
 
         return bg_img</code></pre>
 </details>
