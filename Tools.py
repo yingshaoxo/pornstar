@@ -42,6 +42,17 @@ mv docs/pornstar/_main.html docs/index.html
 rm docs/pornstar -fr
         """)
 
+    def install(self):
+        self.make_docs()
+        t.run("""
+sudo rm -fr dist
+sudo rm -fr build
+sudo -H python3 setup.py sdist bdist_wheel
+cd dist
+sudo pip3 uninstall -y pornstar
+sudo pip3 install *
+""")
+
     def publish(self):
         self.make_docs()
         t.run("""

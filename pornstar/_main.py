@@ -12,6 +12,8 @@ import urllib.request
 from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
+import dlib
+import bz2
 import tensorflow as tf
 
 TENSORFLOW2 = 3 > int(tf.__version__[0]) > 1
@@ -31,6 +33,8 @@ else:
 terminal = Terminal()
 
 
+# Static directory of this module
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 # Root directory of the project
 ROOT_DIR = os.path.abspath(terminal.fix_path("~/Pornstar"))
 # Root directory of the project
@@ -175,12 +179,112 @@ def _init_Whitening_model():
     return model
 
 
+class MyDlib:
+    def __init__(self):
+        print("Dlib is loading")
+        self.face_detector = dlib.get_frontal_face_detector()
+        dlib_shape_predictor_path = os.path.join(
+            ROOT_DIR, "shape_predictor_68_face_landmarks.dat")
+        if not os.path.exists(dlib_shape_predictor_path):
+            self.download_dlib_shape_predictor(dlib_shape_predictor_path)
+        self.face_predictor = dlib.shape_predictor(
+            dlib_shape_predictor_path)
+        print("Dlib loading completed")
+
+        self.last_frame = np.array([])
+
+    def download_dlib_shape_predictor(self, save_to):
+        """Download dlib shape predictor from Releases.
+        """
+        bz2_file = save_to + ".bz2"
+        if not os.path.exists(bz2_file):
+            with urllib.request.urlopen("https://github.com/davisking/dlib-models/raw/master/shape_predictor_68_face_landmarks.dat.bz2") as resp, open(bz2_file, 'wb') as out:
+                shutil.copyfileobj(resp, out)
+        with open(bz2_file, "rb") as stream:
+            compressed_data = stream.read()
+        obj = bz2.BZ2Decompressor()
+        data = obj.decompress(compressed_data)
+        with open(save_to, "wb") as stream:
+            stream.write(data)
+
+    def _adjust_gamma(self, image, gamma=1.0):
+        # build a lookup table mapping the pixel values [0, 255] to
+        # their adjusted gamma values
+        invGamma = 1.0 / gamma
+        table = np.array([((i / 255.0) ** invGamma) * 255
+                          for i in np.arange(0, 256)]).astype("uint8")
+
+        # apply gamma correction using the lookup table
+        return cv2.LUT(image, table)
+
+    def add_image_to_the_top_of_another(self, background_img, top_img, x, y, overlay_size=None):
+        if overlay_size is not None:
+            top_img = cv2.resize(
+                top_img.copy(), overlay_size)
+
+        bg_img = background_img.copy()
+        if (top_img.shape[2] == 4):  # png with transparency
+            # Extract the alpha mask of the RGBA image, convert to RGB
+            b, g, r, a = cv2.split(top_img)
+            overlay_color = cv2.merge((b, g, r))
+            # Apply some simple filtering to remove edge noise
+            mask = cv2.medianBlur(a, 5)
+
+            h, w, _ = overlay_color.shape
+            roi = bg_img[y:y+h, x:x+w]
+            # Black-out the area behind the logo in our original ROI
+            img1_bg = cv2.bitwise_and(
+                roi.copy(), roi.copy(), mask=cv2.bitwise_not(mask))
+            # Mask out the logo from the logo image.
+            img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
+            img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
+            # Update the original image with our new ROI
+            bg_img[y:y+h, x:x+w] = cv2.add(img1_bg, img2_fg)
+
+            return bg_img
+        else:  # no transparency info, just normal image
+            h, w, _ = top_img.shape
+            bg_img[y:y+h, x:x+w] = top_img
+
+            return bg_img
+
+    def add_a_mask_to_face(self, frame, mask_image):
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = self.face_detector(gray_frame)
+        if len(faces):  # face found
+            for face in faces:
+                x = face.left()
+                y = face.top()
+                w = face.right() - x
+                h = face.bottom() - y
+
+                y = y - int(h * 0.05)
+                h = int(h * 1.05)
+
+                #mask_image = cv2.resize(mask_image, (w, h))
+                #frame[y:y+h, x:x+w] = mask_image
+                frame = self.add_image_to_the_top_of_another(
+                    frame, mask_image, x, y, (w, h))
+            self.last_frame = frame
+        else:  # no face at all
+            if (self.last_frame.size != 0):
+                frame = self.last_frame
+            else:
+                white = np.zeros(
+                    (frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
+                white.fill(255)
+                frame = white
+        return frame
+
+
 if (TENSORFLOW2):
     my_deeplab = MyDeepLab()
 else:
     MaskRCNN_model = _init_MASK_RCNN_model()
 
 Whitening_model = _init_Whitening_model()
+
+my_dlib = MyDlib()
 
 
 def _opencv_frame_to_PIL_image(frame):
@@ -194,9 +298,12 @@ def _PIL_image_to_opencv_frame(pil_image):
     return numpy_image[:, :, :3]
 
 
-def read_image_as_a_frame(path_of_image):
+def read_image_as_a_frame(path_of_image, with_transparency=False):
     assert os.path.exists(path_of_image), "image does not exist!"
-    frame = cv2.imread(path_of_image)
+    if with_transparency:
+        frame = cv2.imread(path_of_image, cv2.IMREAD_UNCHANGED)
+    else:
+        frame = cv2.imread(path_of_image)
     # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     logging.info(f"read an image: {path_of_image}")
     return frame
@@ -476,6 +583,14 @@ def effect_of_oil_painting(frame):
     PIL_image = oil_painting(PIL_image, 8, 255)
     frame = _PIL_image_to_opencv_frame(PIL_image)
     return frame
+
+
+def effect_of_adding_a_mask_to_face(frame, mask_image=None):
+    if not isinstance(mask_image, np.ndarray):
+        mask_image = read_image_as_a_frame(os.path.join(
+            STATIC_DIR, "mask.png"), with_transparency=True)
+
+    return my_dlib.add_a_mask_to_face(frame, mask_image)
 
 
 def process_video(path_of_video, effect_function=None, save_to=None):

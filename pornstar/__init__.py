@@ -17,9 +17,20 @@ from ._main import (
     effect_of_whitening_with_a_top_layer,
     effect_of_pure_white,
     effect_of_oil_painting,
+    effect_of_adding_a_mask_to_face,
     process_video,
     process_camera,
 )
+
+try:
+    from ._main import MyDeepLab
+except Exception as e:
+    print(e)
+
+try:
+    from ._main import MyDlib
+except Exception as e:
+    print(e)
 
 
 #from ._main import *
