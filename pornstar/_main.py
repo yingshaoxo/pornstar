@@ -16,6 +16,8 @@ import dlib
 import bz2
 import tensorflow as tf
 
+os.environ['KERAS_BACKEND']='tensorflow'
+
 TENSORFLOW2 = 3 > int(tf.__version__[0]) > 1
 if TENSORFLOW2:  # tensorflow 2.0
     from ._deeplab import Deeplabv3
@@ -158,7 +160,11 @@ else:
         model = _MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
 
         # Load weights trained on MS-COCO
-        model.load_weights(COCO_MODEL_PATH, by_name=True)
+        try:
+            model.load_weights(COCO_MODEL_PATH, by_name=True)
+        except Exception as e:
+            print(e)
+            print(f"you should check {COCO_MODEL_PATH}, to see if that file exists")
 
         return model
 
