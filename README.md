@@ -10,11 +10,14 @@ A Python library to make you become the next famous pornstar!
 * skin smooth
 * skin whitening
 * add a mask to your face
+* faceswap
 * support both `tensorflow1.4` and `tensorflow2.0`
 
-![Feature1](https://github.com/yingshaoxo/pornstar/raw/master/Feature_1.png)
+![Feature1](Feature_1.png)
 
-![Feature2](https://github.com/yingshaoxo/pornstar/raw/master/Feature_2.png)
+![Feature2](Feature_2.png)
+
+![Feature3](Feature_3.png)
 
 
 ### Installation
