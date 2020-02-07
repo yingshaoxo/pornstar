@@ -778,7 +778,7 @@ def effect_of_adding_a_mask_to_face(frame, mask_image=None):
 def effect_of_face_swapping(target_image, new_face=None):
     if not isinstance(new_face, np.ndarray):
         new_face = read_image_as_a_frame(os.path.join(
-            STATIC_DIR, "mask.png"), with_transparency=True)
+            STATIC_DIR, "mask.png"), with_transparency=False)
 
     return my_dlib.face_swap(target_image, new_face)
 
