@@ -300,26 +300,25 @@ class MyDlib:
         img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
         mask = np.zeros_like(img_gray)
-        img2_new_face = np.zeros_like(img2)
+        img2_new_face = np.zeros_like(img2) # create an empty image with the size of original image
 
-        # face detection for the first image
+        # face detection for the second image
         faces = self.face_detector(img_gray)
         if len(faces) != 1:
             raise Exception("The second image should have a face! And only one face!")
-        for face in faces:
-            landmarks = self.face_predictor(img_gray, face)
-            landmarks_points = []
-            for n in range(0, 68):
-                x = landmarks.part(n).x
-                y = landmarks.part(n).y
-                landmarks_points.append((x, y))
-                #cv2.circle(img, (x, y), 3, (0, 0, 255), -1) # we don't need to draw points at the face
+        landmarks = self.face_predictor(img_gray, faces[0])
+        landmarks_points = []
+        for n in range(0, 68):
+            x = landmarks.part(n).x
+            y = landmarks.part(n).y
+            landmarks_points.append((x, y))
+            #cv2.circle(img, (x, y), 3, (0, 0, 255), -1) # we don't need to draw points at the face
 
         points = np.array(landmarks_points, np.int32)
         convexhull = cv2.convexHull(points) # caculate the face area according to a bunch of points
         #cv2.polylines(img, [convexhull], True, (255, 0, 0), 3) # draw a border line for face
-        cv2.fillConvexPoly(mask, convexhull, 255) # get the mask of the first image face
-        face_image_1 = cv2.bitwise_and(img, img, mask=mask) # get the first image face
+        cv2.fillConvexPoly(mask, convexhull, 255) # get the mask of the second image face
+        face_image_1 = cv2.bitwise_and(img, img, mask=mask) # get the second image face
 
         # Delaunay triangulation
         rect = cv2.boundingRect(convexhull)
@@ -347,11 +346,14 @@ class MyDlib:
                 triangle = [index_pt1, index_pt2, index_pt3]
                 indexes_triangles.append(triangle)
 
-        # face detection for the second image
+        # face detection for the first image
         faces2 = self.face_detector(img2_gray)
-        if len(faces2) != 1:
-            #raise Exception("The first image should have at least one face!")
-            raise Exception("The first image should have a face! And only one face!")
+        if len(faces2) == 0:
+            raise Exception("The first image should have at least one face!")
+        #if len(faces2) != 1:
+        #    #raise Exception("The first image should have at least one face!")
+        #    raise Exception("The first image should have a face! And only one face!")
+        convexhull2_list = []
         for face in faces2:
             landmarks = self.face_predictor(img2_gray, face)
             landmarks_points2 = []
@@ -361,96 +363,96 @@ class MyDlib:
                 landmarks_points2.append((x, y))
                 #cv2.circle(img2, (x,y), 3, (0,255,0), -1) # we don't need to draw points at the face
 
-        points2 = np.array(landmarks_points2, np.int32)
-        convexhull2 = cv2.convexHull(points2) # get the area of second face by a bunch of points
+            points2 = np.array(landmarks_points2, np.int32)
+            convexhull2 = cv2.convexHull(points2) # get the area of first face by a bunch of points
+            convexhull2_list.append(convexhull2)
 
-        # Triangulation of both faces
-        for triangle_index in indexes_triangles:
-            # Triangulation of the first face
-            tr1_pt1 = landmarks_points[triangle_index[0]]
-            tr1_pt2 = landmarks_points[triangle_index[1]]
-            tr1_pt3 = landmarks_points[triangle_index[2]]
-            triangle1 = np.array([tr1_pt1, tr1_pt2, tr1_pt3], np.int32)
+            # Triangulation of both faces
+            for triangle_index in indexes_triangles:
+                # Triangulation of the second face
+                tr1_pt1 = landmarks_points[triangle_index[0]]
+                tr1_pt2 = landmarks_points[triangle_index[1]]
+                tr1_pt3 = landmarks_points[triangle_index[2]]
+                triangle1 = np.array([tr1_pt1, tr1_pt2, tr1_pt3], np.int32)
 
-            rect1 = cv2.boundingRect(triangle1)
-            (x, y, w, h) = rect1
-            cropped_triangle = img[y: y + h, x: x + w]
-            cropped_tr1_mask = np.zeros((h, w), np.uint8)
+                rect1 = cv2.boundingRect(triangle1)
+                (x, y, w, h) = rect1
+                cropped_triangle = img[y: y + h, x: x + w]
+                cropped_tr1_mask = np.zeros((h, w), np.uint8)
 
-            points = np.array([[tr1_pt1[0] - x, tr1_pt1[1] - y],
-                               [tr1_pt2[0] - x, tr1_pt2[1] - y],
-                               [tr1_pt3[0] - x, tr1_pt3[1] - y]], np.int32)
+                points = np.array([[tr1_pt1[0] - x, tr1_pt1[1] - y],
+                                   [tr1_pt2[0] - x, tr1_pt2[1] - y],
+                                   [tr1_pt3[0] - x, tr1_pt3[1] - y]], np.int32)
 
-            cv2.fillConvexPoly(cropped_tr1_mask, points, 255)
-            cropped_triangle = cv2.bitwise_and(cropped_triangle, cropped_triangle,
-                                               mask=cropped_tr1_mask)
+                cv2.fillConvexPoly(cropped_tr1_mask, points, 255)
+                cropped_triangle = cv2.bitwise_and(cropped_triangle, cropped_triangle,
+                                                   mask=cropped_tr1_mask)
 
-            #cv2.line(img, tr1_pt1, tr1_pt2, (0, 0, 255), 2)
-            #cv2.line(img, tr1_pt3, tr1_pt2, (0, 0, 255), 2)
-            #cv2.line(img, tr1_pt1, tr1_pt3, (0, 0, 255), 2)
+                #cv2.line(img, tr1_pt1, tr1_pt2, (0, 0, 255), 2)
+                #cv2.line(img, tr1_pt3, tr1_pt2, (0, 0, 255), 2)
+                #cv2.line(img, tr1_pt1, tr1_pt3, (0, 0, 255), 2)
 
-            # Triangulation of second face
-            tr2_pt1 = landmarks_points2[triangle_index[0]]
-            tr2_pt2 = landmarks_points2[triangle_index[1]]
-            tr2_pt3 = landmarks_points2[triangle_index[2]]
-            triangle2 = np.array([tr2_pt1, tr2_pt2, tr2_pt3], np.int32)
+                # Triangulation of first face
+                tr2_pt1 = landmarks_points2[triangle_index[0]]
+                tr2_pt2 = landmarks_points2[triangle_index[1]]
+                tr2_pt3 = landmarks_points2[triangle_index[2]]
+                triangle2 = np.array([tr2_pt1, tr2_pt2, tr2_pt3], np.int32)
 
-            rect2 = cv2.boundingRect(triangle2)
-            (x, y, w, h) = rect2
-            cropped_triangle2 = img2[y: y + h, x: x + w]
-            cropped_tr2_mask = np.zeros((h, w), np.uint8)
+                rect2 = cv2.boundingRect(triangle2)
+                (x, y, w, h) = rect2
+                cropped_triangle2 = img2[y: y + h, x: x + w]
+                cropped_tr2_mask = np.zeros((h, w), np.uint8)
 
-            points2 = np.array([[tr2_pt1[0] - x, tr2_pt1[1] - y],
-                                [tr2_pt2[0] - x, tr2_pt2[1] - y],
-                                [tr2_pt3[0] - x, tr2_pt3[1] - y]], np.int32)
+                points2 = np.array([[tr2_pt1[0] - x, tr2_pt1[1] - y],
+                                    [tr2_pt2[0] - x, tr2_pt2[1] - y],
+                                    [tr2_pt3[0] - x, tr2_pt3[1] - y]], np.int32)
 
 
-            #cv2.fillConvexPoly(cropped_tr2_mask, points2, 255)
-            #cropped_triangle2 = cv2.bitwise_and(cropped_triangle2, cropped_triangle2,
-            #                                    mask=cropped_tr2_mask)
+                #cv2.fillConvexPoly(cropped_tr2_mask, points2, 255)
+                #cropped_triangle2 = cv2.bitwise_and(cropped_triangle2, cropped_triangle2,
+                #                                    mask=cropped_tr2_mask)
 
-            #cv2.line(img2, tr2_pt1, tr2_pt2, (0, 0, 255), 2)
-            #cv2.line(img2, tr2_pt3, tr2_pt2, (0, 0, 255), 2)
-            #cv2.line(img2, tr2_pt1, tr2_pt3, (0, 0, 255), 2)
+                #cv2.line(img2, tr2_pt1, tr2_pt2, (0, 0, 255), 2)
+                #cv2.line(img2, tr2_pt3, tr2_pt2, (0, 0, 255), 2)
+                #cv2.line(img2, tr2_pt1, tr2_pt3, (0, 0, 255), 2)
 
-            # Warp triangles
-            # We convert the first image triangle to second inage triangle. warpAffine() is the key function for doing that
-            points = np.float32(points)
-            points2 = np.float32(points2)
-            M = cv2.getAffineTransform(points, points2)
-            warped_triangle = cv2.warpAffine(cropped_triangle, M, (w, h),flags=cv2.INTER_NEAREST, borderValue=(0,0,0))
+                # Warp triangles
+                # We convert the first image triangle to second inage triangle. warpAffine() is the key function for doing that
+                points = np.float32(points)
+                points2 = np.float32(points2)
+                M = cv2.getAffineTransform(points, points2)
+                warped_triangle = cv2.warpAffine(cropped_triangle, M, (w, h),flags=cv2.INTER_NEAREST, borderValue=(0,0,0))
 
-            # Reconstructing destination face
-            target_index = np.any(warped_triangle != [0, 0, 0], axis=-1)
-            img2_new_face[y: y + h, x: x + w][target_index] = warped_triangle[target_index]
+                # Reconstructing destination face
+                target_index = np.any(warped_triangle != [0, 0, 0], axis=-1)
+                img2_new_face[y: y + h, x: x + w][target_index] = warped_triangle[target_index]
 
-            #cv2.imshow("piece", warped_triangle) # keep press esc to see the generating process dynamiclly
-            #cv2.imshow("how we generate the new face", img2_new_face)
-            #cv2.waitKey(0)
+                #cv2.imshow("piece", warped_triangle) # keep press esc to see the generating process dynamiclly
+                #cv2.imshow("how we generate the new face", img2_new_face)
+                #cv2.waitKey(0)
 
         # Face swapped (putting 1st face into 2nd face)
-        img2_face_mask = np.zeros_like(img2_gray)
-        img2_head_mask = cv2.fillConvexPoly(img2_face_mask, convexhull2, 255)
-        img2_face_mask = cv2.bitwise_not(img2_head_mask)
+        seamlessclone = img2
+        for convexhull2_element in convexhull2_list:
+            img2_face_mask = np.zeros_like(img2_gray)
+            img2_head_mask = cv2.fillConvexPoly(img2_face_mask, convexhull2_element, 255)
+            img2_face_mask = cv2.bitwise_not(img2_head_mask)
 
-        img2_head_noface = cv2.bitwise_and(img2, img2, mask=img2_face_mask)
+            img2_head_noface = cv2.bitwise_and(seamlessclone, seamlessclone, mask=img2_face_mask)
+            result = cv2.add(img2_head_noface, img2_new_face)
 
-        result = cv2.add(img2_head_noface, img2_new_face)
+            #(x, y, w, h) = cv2.boundingRect(convexhull2)
+            #center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
+            #seamlessclone = cv2.seamlessClone(result, img2, img2_head_mask, center_face2, cv2.NORMAL_CLONE)
 
-        #(x, y, w, h) = cv2.boundingRect(convexhull2)
-        #center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
-        #seamlessclone = cv2.seamlessClone(result, img2, img2_head_mask, center_face2, cv2.NORMAL_CLONE)
+            (x, y, w, h) = cv2.boundingRect(img2_head_mask)
+            real_new_face = img2_new_face[y: y + h, x: x + w]
+            center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
+            real_new_face_mask = img2_head_mask[y: y + h, x: x + w]
+            seamlessclone = cv2.seamlessClone(real_new_face, seamlessclone, real_new_face_mask, center_face2, cv2.NORMAL_CLONE) # (new_face, the_target_image, mask_of_new_face_at_target_image, the_center_point_of_new_face_at_the_target_image, cv2.MIXED_CLONE)
 
-        (x, y, w, h) = cv2.boundingRect(img2_head_mask)
-        real_new_face = img2_new_face[y: y + h, x: x + w]
-        center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
-        real_new_face_mask = img2_head_mask[y: y + h, x: x + w]
-        seamlessclone = cv2.seamlessClone(real_new_face, img2, real_new_face_mask, center_face2, cv2.NORMAL_CLONE) # (new_face, the_target_image, mask_of_new_face_at_target_image, the_center_point_of_new_face_at_the_target_image, cv2.MIXED_CLONE)
-
-        #cv2.imshow("first_img", img)
-        #cv2.imshow("second_img", img2)
-        #cv2.imshow("second_img_head_without_face", img2_head_noface)
-        #cv2.imshow("new_face", img2_new_face)
+        #cv2.imshow("first_img", img2)
+        #cv2.imshow("second_img", img)
         #cv2.imshow("raw_combine", result)
         #cv2.imshow("with seamlessclone", seamlessclone)
         #cv2.waitKey(0)
@@ -828,5 +830,5 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
 if __name__ == "__main__":
     img1 = read_image_as_a_frame("../example/trump.jpg")
-    img2 = read_image_as_a_frame("../example/me.jpg")
+    img2 = read_image_as_a_frame("../example/girl.jpg")
     my_dlib.face_swap(img1, img2)

@@ -10,7 +10,7 @@ target_image = pornstar.read_image_as_a_frame(target_image)
 new_face = pornstar.read_image_as_a_frame(new_face)
 
 def process(frame):
-    frame = pornstar.effect_of_face_swapping(frame)
+    frame = pornstar.effect_of_face_swapping(frame, new_face)
     return frame
 
 result = pornstar.stylize_the_whole_image(
