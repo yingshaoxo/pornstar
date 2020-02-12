@@ -19,6 +19,7 @@ from ._main import (
     effect_of_oil_painting,
     effect_of_adding_a_mask_to_face,
     effect_of_face_swapping,
+    effect_of_face_slimming,
     process_video,
     process_camera,
 )

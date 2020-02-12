@@ -300,7 +300,7 @@ class MyDlib:
         img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
         mask = np.zeros_like(img_gray)
-        img2_new_face = np.zeros_like(img2) # create an empty image with the size of original image
+        img2_new_face = np.zeros_like(img2)  # create an empty image with the size of original image
 
         # face detection for the second image
         faces = self.face_detector(img_gray)
@@ -312,20 +312,20 @@ class MyDlib:
             x = landmarks.part(n).x
             y = landmarks.part(n).y
             landmarks_points.append((x, y))
-            #cv2.circle(img, (x, y), 3, (0, 0, 255), -1) # we don't need to draw points at the face
+            # cv2.circle(img, (x, y), 3, (0, 0, 255), -1) # we don't need to draw points at the face
 
         points = np.array(landmarks_points, np.int32)
-        convexhull = cv2.convexHull(points) # caculate the face area according to a bunch of points
-        #cv2.polylines(img, [convexhull], True, (255, 0, 0), 3) # draw a border line for face
-        cv2.fillConvexPoly(mask, convexhull, 255) # get the mask of the second image face
-        face_image_1 = cv2.bitwise_and(img, img, mask=mask) # get the second image face
+        convexhull = cv2.convexHull(points)  # caculate the face area according to a bunch of points
+        # cv2.polylines(img, [convexhull], True, (255, 0, 0), 3) # draw a border line for face
+        cv2.fillConvexPoly(mask, convexhull, 255)  # get the mask of the second image face
+        face_image_1 = cv2.bitwise_and(img, img, mask=mask)  # get the second image face
 
         # Delaunay triangulation
         rect = cv2.boundingRect(convexhull)
         subdiv = cv2.Subdiv2D(rect)
         subdiv.insert(landmarks_points)
-        triangles = subdiv.getTriangleList() # get a bunch of triangles
-        triangles = np.array(triangles, dtype=np.int32) # convert it to int
+        triangles = subdiv.getTriangleList()  # get a bunch of triangles
+        triangles = np.array(triangles, dtype=np.int32)  # convert it to int
 
         indexes_triangles = []
         for t in triangles:
@@ -350,7 +350,7 @@ class MyDlib:
         faces2 = self.face_detector(img2_gray)
         if len(faces2) == 0:
             raise Exception("The first image should have at least one face!")
-        #if len(faces2) != 1:
+        # if len(faces2) != 1:
         #    #raise Exception("The first image should have at least one face!")
         #    raise Exception("The first image should have a face! And only one face!")
         convexhull2_list = []
@@ -361,10 +361,10 @@ class MyDlib:
                 x = landmarks.part(n).x
                 y = landmarks.part(n).y
                 landmarks_points2.append((x, y))
-                #cv2.circle(img2, (x,y), 3, (0,255,0), -1) # we don't need to draw points at the face
+                # cv2.circle(img2, (x,y), 3, (0,255,0), -1) # we don't need to draw points at the face
 
             points2 = np.array(landmarks_points2, np.int32)
-            convexhull2 = cv2.convexHull(points2) # get the area of first face by a bunch of points
+            convexhull2 = cv2.convexHull(points2)  # get the area of first face by a bunch of points
             convexhull2_list.append(convexhull2)
 
             # Triangulation of both faces
@@ -407,9 +407,8 @@ class MyDlib:
                                     [tr2_pt2[0] - x, tr2_pt2[1] - y],
                                     [tr2_pt3[0] - x, tr2_pt3[1] - y]], np.int32)
 
-
                 #cv2.fillConvexPoly(cropped_tr2_mask, points2, 255)
-                #cropped_triangle2 = cv2.bitwise_and(cropped_triangle2, cropped_triangle2,
+                # cropped_triangle2 = cv2.bitwise_and(cropped_triangle2, cropped_triangle2,
                 #                                    mask=cropped_tr2_mask)
 
                 #cv2.line(img2, tr2_pt1, tr2_pt2, (0, 0, 255), 2)
@@ -421,15 +420,15 @@ class MyDlib:
                 points = np.float32(points)
                 points2 = np.float32(points2)
                 M = cv2.getAffineTransform(points, points2)
-                warped_triangle = cv2.warpAffine(cropped_triangle, M, (w, h),flags=cv2.INTER_NEAREST, borderValue=(0,0,0))
+                warped_triangle = cv2.warpAffine(cropped_triangle, M, (w, h), flags=cv2.INTER_NEAREST, borderValue=(0, 0, 0))
 
                 # Reconstructing destination face
                 target_index = np.any(warped_triangle != [0, 0, 0], axis=-1)
                 img2_new_face[y: y + h, x: x + w][target_index] = warped_triangle[target_index]
 
-                #cv2.imshow("piece", warped_triangle) # keep press esc to see the generating process dynamiclly
+                # cv2.imshow("piece", warped_triangle) # keep press esc to see the generating process dynamiclly
                 #cv2.imshow("how we generate the new face", img2_new_face)
-                #cv2.waitKey(0)
+                # cv2.waitKey(0)
 
         # Face swapped (putting 1st face into 2nd face)
         seamlessclone = img2
@@ -449,16 +448,132 @@ class MyDlib:
             real_new_face = img2_new_face[y: y + h, x: x + w]
             center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
             real_new_face_mask = img2_head_mask[y: y + h, x: x + w]
-            seamlessclone = cv2.seamlessClone(real_new_face, seamlessclone, real_new_face_mask, center_face2, cv2.NORMAL_CLONE) # (new_face, the_target_image, mask_of_new_face_at_target_image, the_center_point_of_new_face_at_the_target_image, cv2.MIXED_CLONE)
+            seamlessclone = cv2.seamlessClone(real_new_face, seamlessclone, real_new_face_mask, center_face2, cv2.NORMAL_CLONE)  # (new_face, the_target_image, mask_of_new_face_at_target_image, the_center_point_of_new_face_at_the_target_image, cv2.MIXED_CLONE)
 
         #cv2.imshow("first_img", img2)
         #cv2.imshow("second_img", img)
         #cv2.imshow("raw_combine", result)
         #cv2.imshow("with seamlessclone", seamlessclone)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         return seamlessclone
+
+    def face_slimming(self, image):
+        detector = self.face_detector
+        predictor = self.face_predictor
+
+        def landmark_dec_dlib_fun(img_src):
+            img_gray = cv2.cvtColor(img_src, cv2.COLOR_BGR2GRAY)
+
+            land_marks = []
+
+            rects = detector(img_gray, 0)
+
+            for i in range(len(rects)):
+                land_marks_node = np.matrix(
+                    [[p.x, p.y] for p in predictor(img_gray, rects[i]).parts()])
+                land_marks.append(land_marks_node)
+
+            return land_marks
+
+        def localTranslationWarp(srcImg, startX, startY, endX, endY, radius):
+            '''
+            方法： Interactive Image Warping 局部平移算法
+            '''
+
+            ddradius = float(radius * radius)
+            copyImg = np.zeros(srcImg.shape, np.uint8)
+            copyImg = srcImg.copy()
+
+            # 计算公式中的|m-c|^2
+            ddmc = (endX - startX) * (endX - startX) + \
+                (endY - startY) * (endY - startY)
+            H, W, C = srcImg.shape
+            for i in range(W):
+                for j in range(H):
+                    # 计算该点是否在形变圆的范围之内
+                    # 优化，第一步，直接判断是会在（startX,startY)的矩阵框中
+                    if math.fabs(i-startX) > radius and math.fabs(j-startY) > radius:
+                        continue
+
+                    distance = (i - startX) * (i - startX) + \
+                        (j - startY) * (j - startY)
+
+                    if(distance < ddradius):
+                        # 计算出（i,j）坐标的原坐标
+                        # 计算公式中右边平方号里的部分
+                        ratio = (ddradius-distance) / (ddradius - distance + ddmc)
+                        ratio = ratio * ratio
+
+                        # 映射原位置
+                        UX = i - ratio * (endX - startX)
+                        UY = j - ratio * (endY - startY)
+
+                        # 根据双线性插值法得到UX，UY的值
+                        value = BilinearInsert(srcImg, UX, UY)
+                        # 改变当前 i ，j的值
+                        copyImg[j, i] = value
+
+            return copyImg
+
+        def BilinearInsert(src, ux, uy):
+            # 双线性插值法
+            w, h, c = src.shape
+            if c == 3:
+                x1 = int(ux)
+                x2 = x1+1
+                y1 = int(uy)
+                y2 = y1+1
+
+                part1 = src[y1, x1].astype(np.float)*(float(x2)-ux)*(float(y2)-uy)
+                part2 = src[y1, x2].astype(np.float)*(ux-float(x1))*(float(y2)-uy)
+                part3 = src[y2, x1].astype(np.float) * (float(x2) - ux)*(uy-float(y1))
+                part4 = src[y2, x2].astype(np.float) * \
+                    (ux-float(x1)) * (uy - float(y1))
+
+                insertValue = part1+part2+part3+part4
+
+                return insertValue.astype(np.int8)
+
+        src = image
+
+        landmarks = landmark_dec_dlib_fun(src)
+
+        # 如果未检测到人脸关键点，就不进行瘦脸
+        if len(landmarks) == 0:
+            raise Exception("No face was been detected!")
+
+        for landmarks_node in landmarks:
+            left_landmark = landmarks_node[3]
+            left_landmark_down = landmarks_node[5]
+
+            right_landmark = landmarks_node[13]
+            right_landmark_down = landmarks_node[15]
+
+            endPt = landmarks_node[30]
+
+            # 计算第4个点到第6个点的距离作为瘦脸距离
+            r_left = math.sqrt((left_landmark[0, 0]-left_landmark_down[0, 0])*(left_landmark[0, 0]-left_landmark_down[0, 0]) +
+                               (left_landmark[0, 1] - left_landmark_down[0, 1]) * (left_landmark[0, 1] - left_landmark_down[0, 1]))
+
+            # 计算第14个点到第16个点的距离作为瘦脸距离
+            r_right = math.sqrt((right_landmark[0, 0]-right_landmark_down[0, 0])*(right_landmark[0, 0]-right_landmark_down[0, 0]) +
+                                (right_landmark[0, 1] - right_landmark_down[0, 1]) * (right_landmark[0, 1] - right_landmark_down[0, 1]))
+
+            # 瘦左边脸
+            thin_image = localTranslationWarp(
+                src, left_landmark[0, 0], left_landmark[0, 1], endPt[0, 0], endPt[0, 1], r_left)
+            # 瘦右边脸
+            thin_image = localTranslationWarp(
+                thin_image, right_landmark[0, 0], right_landmark[0, 1], endPt[0, 0], endPt[0, 1], r_right)
+
+        # 显示
+        #cv2.imshow('original', src)
+        #cv2.imshow('thin', thin_image)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+        return thin_image
 
 
 if (TENSORFLOW2):
@@ -785,6 +900,10 @@ def effect_of_face_swapping(target_image, new_face=None):
     return my_dlib.face_swap(target_image, new_face)
 
 
+def effect_of_face_slimming(source_img):
+    return my_dlib.face_slimming(source_img)
+
+
 def process_video(path_of_video, effect_function=None, save_to=None):
     def return_the_same_frame(frame):
         return frame
@@ -829,6 +948,5 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
 
 if __name__ == "__main__":
-    img1 = read_image_as_a_frame("../example/trump.jpg")
-    img2 = read_image_as_a_frame("../example/girl.jpg")
-    my_dlib.face_swap(img1, img2)
+    img = read_image_as_a_frame("../example/me.jpg")
+    my_dlib.face_slimming(img)
