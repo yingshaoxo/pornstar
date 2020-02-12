@@ -11,6 +11,7 @@ A Python library to make you become the next famous pornstar!
 * skin whitening
 * add a mask to your face
 * faceswap
+* face slimming
 * support both `tensorflow1.4` and `tensorflow2.0`
 
 ![Feature1](Feature_1.png)
