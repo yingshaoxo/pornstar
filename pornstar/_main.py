@@ -232,36 +232,27 @@ class MyDlib:
             top_img = cv2.resize(
                 top_img.copy(), overlay_size)
 
-        bg_img = background_img.copy()
+        if (background_img.shape[2] == 4):  # png with transparency
+            backgound_Image = Image.fromarray(background_img, mode="RGBA")
+        else:
+            backgound_Image = Image.fromarray(background_img, mode="RGB")
+
         if (top_img.shape[2] == 4):  # png with transparency
-            # Extract the alpha mask of the RGBA image, convert to RGB
-            b, g, r, a = cv2.split(top_img)
-            overlay_color = cv2.merge((b, g, r))
-            # Apply some simple filtering to remove edge noise
-            mask = cv2.medianBlur(a, 5)
+            object_Image = Image.fromarray(top_img, mode="RGBA")
+        else:
+            object_Image = Image.fromarray(top_img, mode="RGB")
 
-            h, w, _ = overlay_color.shape
-            roi = bg_img[y:y+h, x:x+w]
-            # Black-out the area behind the logo in our original ROI
-            img1_bg = cv2.bitwise_and(
-                roi.copy(), roi.copy(), mask=cv2.bitwise_not(mask))
-            # Mask out the logo from the logo image.
-            img2_fg = cv2.bitwise_and(overlay_color, overlay_color, mask=mask)
-            #img2_fg = cv2.cvtColor(img2_fg, cv2.COLOR_BGR2RGB)
-            # Update the original image with our new ROI
-            bg_img[y:y+h, x:x+w] = cv2.add(img1_bg, img2_fg)
+        if (top_img.shape[2] == 4):  # png with transparency
+            backgound_Image.paste(object_Image, box=(x, y), mask=object_Image)
+        else:
+            backgound_Image.paste(object_Image, box=(x, y))
 
-            return bg_img
-        else:  # no transparency info, just normal image
-            h, w, _ = top_img.shape
-            bg_img[y:y+h, x:x+w] = top_img
-
-            return bg_img
+        return np.array(backgound_Image).astype(np.uint8)
 
     def add_a_mask_to_face(self, frame, mask_image):
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = self.face_detector(gray_frame)
-        if len(faces):  # face found
+        if len(faces) > 0:  # face found
             for face in faces:
                 x = face.left()
                 y = face.top()
@@ -273,18 +264,11 @@ class MyDlib:
 
                 frame = self.add_image_to_the_top_of_another(
                     frame, mask_image, x, y, (w, h))
-            self.last_frame = frame
+            return frame
         else:  # no face at all
-            if (self.last_frame.size != 0):
-                frame = self.last_frame
-            else:
-                white = np.zeros(
-                    (frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
-                white.fill(255)
-                frame = white
-        return frame
+            raise Exception("No face found!")
 
-    def face_swap(self, original, new_face):
+    def face_swap(self, original_face, new_face):
         def extract_index_nparray(nparray):
             index = None
             for num in nparray[0]:
@@ -292,33 +276,30 @@ class MyDlib:
                 break
             return index
 
-        img2 = original
-        img = new_face
-
         # decrease the size to speed up the processing
-        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+        new_face_gray = cv2.cvtColor(new_face, cv2.COLOR_BGR2GRAY)
+        original_face_gray = cv2.cvtColor(original_face, cv2.COLOR_BGR2GRAY)
 
-        mask = np.zeros_like(img_gray)
-        img2_new_face = np.zeros_like(img2)  # create an empty image with the size of original image
+        mask = np.zeros_like(new_face_gray)
+        original_face_new_face = np.zeros_like(original_face)  # create an empty image with the size of original image
 
         # face detection for the second image
-        faces = self.face_detector(img_gray)
+        faces = self.face_detector(new_face_gray)
         if len(faces) != 1:
             raise Exception("The second image should have a face! And only one face!")
-        landmarks = self.face_predictor(img_gray, faces[0])
+        landmarks = self.face_predictor(new_face_gray, faces[0])
         landmarks_points = []
         for n in range(0, 68):
             x = landmarks.part(n).x
             y = landmarks.part(n).y
             landmarks_points.append((x, y))
-            # cv2.circle(img, (x, y), 3, (0, 0, 255), -1) # we don't need to draw points at the face
+            # cv2.circle(new_face, (x, y), 3, (0, 0, 255), -1) # we don't need to draw points at the face
 
         points = np.array(landmarks_points, np.int32)
         convexhull = cv2.convexHull(points)  # caculate the face area according to a bunch of points
-        # cv2.polylines(img, [convexhull], True, (255, 0, 0), 3) # draw a border line for face
+        # cv2.polylines(new_face, [convexhull], True, (255, 0, 0), 3) # draw a border line for face
         cv2.fillConvexPoly(mask, convexhull, 255)  # get the mask of the second image face
-        face_image_1 = cv2.bitwise_and(img, img, mask=mask)  # get the second image face
+        face_image_1 = cv2.bitwise_and(new_face, new_face, mask=mask)  # get the second image face
 
         # Delaunay triangulation
         rect = cv2.boundingRect(convexhull)
@@ -347,21 +328,29 @@ class MyDlib:
                 indexes_triangles.append(triangle)
 
         # face detection for the first image
-        faces2 = self.face_detector(img2_gray)
+        faces2 = self.face_detector(original_face_gray)
         if len(faces2) == 0:
-            raise Exception("The first image should have at least one face!")
+            #raise Exception("The first image should have at least one face!")
+            if (self.last_frame.size != 0):
+                frame = self.last_frame
+            else:
+                white = np.zeros(
+                    (new_face.shape[0], new_face.shape[1], 3), dtype=np.uint8)
+                white.fill(255)
+                frame = white
+            return frame
         # if len(faces2) != 1:
         #    #raise Exception("The first image should have at least one face!")
         #    raise Exception("The first image should have a face! And only one face!")
         convexhull2_list = []
         for face in faces2:
-            landmarks = self.face_predictor(img2_gray, face)
+            landmarks = self.face_predictor(original_face_gray, face)
             landmarks_points2 = []
             for n in range(0, 68):
                 x = landmarks.part(n).x
                 y = landmarks.part(n).y
                 landmarks_points2.append((x, y))
-                # cv2.circle(img2, (x,y), 3, (0,255,0), -1) # we don't need to draw points at the face
+                # cv2.circle(original_face, (x,y), 3, (0,255,0), -1) # we don't need to draw points at the face
 
             points2 = np.array(landmarks_points2, np.int32)
             convexhull2 = cv2.convexHull(points2)  # get the area of first face by a bunch of points
@@ -377,7 +366,7 @@ class MyDlib:
 
                 rect1 = cv2.boundingRect(triangle1)
                 (x, y, w, h) = rect1
-                cropped_triangle = img[y: y + h, x: x + w]
+                cropped_triangle = new_face[y: y + h, x: x + w]
                 cropped_tr1_mask = np.zeros((h, w), np.uint8)
 
                 points = np.array([[tr1_pt1[0] - x, tr1_pt1[1] - y],
@@ -388,9 +377,9 @@ class MyDlib:
                 cropped_triangle = cv2.bitwise_and(cropped_triangle, cropped_triangle,
                                                    mask=cropped_tr1_mask)
 
-                #cv2.line(img, tr1_pt1, tr1_pt2, (0, 0, 255), 2)
-                #cv2.line(img, tr1_pt3, tr1_pt2, (0, 0, 255), 2)
-                #cv2.line(img, tr1_pt1, tr1_pt3, (0, 0, 255), 2)
+                #cv2.line(new_face, tr1_pt1, tr1_pt2, (0, 0, 255), 2)
+                #cv2.line(new_face, tr1_pt3, tr1_pt2, (0, 0, 255), 2)
+                #cv2.line(new_face, tr1_pt1, tr1_pt3, (0, 0, 255), 2)
 
                 # Triangulation of first face
                 tr2_pt1 = landmarks_points2[triangle_index[0]]
@@ -400,7 +389,7 @@ class MyDlib:
 
                 rect2 = cv2.boundingRect(triangle2)
                 (x, y, w, h) = rect2
-                cropped_triangle2 = img2[y: y + h, x: x + w]
+                cropped_triangle2 = original_face[y: y + h, x: x + w]
                 cropped_tr2_mask = np.zeros((h, w), np.uint8)
 
                 points2 = np.array([[tr2_pt1[0] - x, tr2_pt1[1] - y],
@@ -411,9 +400,9 @@ class MyDlib:
                 # cropped_triangle2 = cv2.bitwise_and(cropped_triangle2, cropped_triangle2,
                 #                                    mask=cropped_tr2_mask)
 
-                #cv2.line(img2, tr2_pt1, tr2_pt2, (0, 0, 255), 2)
-                #cv2.line(img2, tr2_pt3, tr2_pt2, (0, 0, 255), 2)
-                #cv2.line(img2, tr2_pt1, tr2_pt3, (0, 0, 255), 2)
+                #cv2.line(original_face, tr2_pt1, tr2_pt2, (0, 0, 255), 2)
+                #cv2.line(original_face, tr2_pt3, tr2_pt2, (0, 0, 255), 2)
+                #cv2.line(original_face, tr2_pt1, tr2_pt3, (0, 0, 255), 2)
 
                 # Warp triangles
                 # We convert the first image triangle to second inage triangle. warpAffine() is the key function for doing that
@@ -424,34 +413,34 @@ class MyDlib:
 
                 # Reconstructing destination face
                 target_index = np.any(warped_triangle != [0, 0, 0], axis=-1)
-                img2_new_face[y: y + h, x: x + w][target_index] = warped_triangle[target_index]
+                original_face_new_face[y: y + h, x: x + w][target_index] = warped_triangle[target_index]
 
                 # cv2.imshow("piece", warped_triangle) # keep press esc to see the generating process dynamiclly
-                #cv2.imshow("how we generate the new face", img2_new_face)
+                #cv2.imshow("how we generate the new face", original_face_new_face)
                 # cv2.waitKey(0)
 
         # Face swapped (putting 1st face into 2nd face)
-        seamlessclone = img2
+        seamlessclone = original_face
         for convexhull2_element in convexhull2_list:
-            img2_face_mask = np.zeros_like(img2_gray)
-            img2_head_mask = cv2.fillConvexPoly(img2_face_mask, convexhull2_element, 255)
-            img2_face_mask = cv2.bitwise_not(img2_head_mask)
+            original_face_face_mask = np.zeros_like(original_face_gray)
+            original_face_head_mask = cv2.fillConvexPoly(original_face_face_mask, convexhull2_element, 255)
+            original_face_face_mask = cv2.bitwise_not(original_face_head_mask)
 
-            img2_head_noface = cv2.bitwise_and(seamlessclone, seamlessclone, mask=img2_face_mask)
-            result = cv2.add(img2_head_noface, img2_new_face)
+            original_face_head_noface = cv2.bitwise_and(seamlessclone, seamlessclone, mask=original_face_face_mask)
+            result = cv2.add(original_face_head_noface, original_face_new_face)
 
             #(x, y, w, h) = cv2.boundingRect(convexhull2)
             #center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
-            #seamlessclone = cv2.seamlessClone(result, img2, img2_head_mask, center_face2, cv2.NORMAL_CLONE)
+            #seamlessclone = cv2.seamlessClone(result, original_face, original_face_head_mask, center_face2, cv2.NORMAL_CLONE)
 
-            (x, y, w, h) = cv2.boundingRect(img2_head_mask)
-            real_new_face = img2_new_face[y: y + h, x: x + w]
+            (x, y, w, h) = cv2.boundingRect(original_face_head_mask)
+            real_new_face = original_face_new_face[y: y + h, x: x + w]
             center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
-            real_new_face_mask = img2_head_mask[y: y + h, x: x + w]
+            real_new_face_mask = original_face_head_mask[y: y + h, x: x + w]
             seamlessclone = cv2.seamlessClone(real_new_face, seamlessclone, real_new_face_mask, center_face2, cv2.NORMAL_CLONE)  # (new_face, the_target_image, mask_of_new_face_at_target_image, the_center_point_of_new_face_at_the_target_image, cv2.MIXED_CLONE)
 
-        #cv2.imshow("first_img", img2)
-        #cv2.imshow("second_img", img)
+        #cv2.imshow("first_img", original_face)
+        #cv2.imshow("second_img", new_face)
         #cv2.imshow("raw_combine", result)
         #cv2.imshow("with seamlessclone", seamlessclone)
         # cv2.waitKey(0)
@@ -542,7 +531,15 @@ class MyDlib:
 
         # 如果未检测到人脸关键点，就不进行瘦脸
         if len(landmarks) == 0:
-            raise Exception("No face was been detected!")
+            #raise Exception("No face was been detected!")
+            if (self.last_frame.size != 0):
+                frame = self.last_frame
+            else:
+                white = np.zeros(
+                    (frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
+                white.fill(255)
+                frame = white
+            return frame
 
         for landmarks_node in landmarks:
             left_landmark = landmarks_node[3]
@@ -593,7 +590,6 @@ def _opencv_frame_to_PIL_image(frame):
 
 def _PIL_image_to_opencv_frame(pil_image):
     numpy_image = np.asarray(pil_image)
-    # numpy_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2RGB)
     return numpy_image[:, :, :3]
 
 
@@ -603,7 +599,6 @@ def read_image_as_a_frame(path_of_image, with_transparency=False):
         frame = cv2.imread(path_of_image, cv2.IMREAD_UNCHANGED)
     else:
         frame = cv2.imread(path_of_image)
-    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     logging.info(f"read an image: {path_of_image}")
     return frame
 
@@ -667,12 +662,10 @@ def get_human_and_background_masks_from_a_frame(frame):
         if (results.size == 0):
             return None, None
         else:
-            #results = my_deeplab.scale_up_mask(results)
             return results, np.logical_not(results)
     else:
         results = MaskRCNN_model.detect([frame], verbose=0)
         r = results[0]
-        # visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], r['scores'])
 
         # print(r['class_ids'])
         if (_class_names.index("person") in r['class_ids']):
@@ -695,7 +688,6 @@ def get_human_and_background_masks_from_a_frame(frame):
                     # mask2 = (mask == False).astype(np.uint8)  # black pixel, non-human shape
 
                     logging.debug(f"mask1.shape: {mask1.shape}")
-                    # cv2.bitwise_or(final_mask1, mask1)
                     final_mask1 = np.logical_or(final_mask1, mask1)
 
                 logging.debug(f"final_mask1 size: {final_mask1.shape}\n")
@@ -889,7 +881,22 @@ def effect_of_adding_a_mask_to_face(frame, mask_image=None):
         mask_image = read_image_as_a_frame(os.path.join(
             STATIC_DIR, "mask.png"), with_transparency=True)
 
-    return my_dlib.add_a_mask_to_face(frame, mask_image)
+    self = my_dlib
+    current_frame = frame
+    try:
+        result = my_dlib.add_a_mask_to_face(frame, mask_image)
+        self.last_frame = result
+    except Exception as e:
+        print(e)
+        if (self.last_frame.size != 0):
+            result = self.last_frame
+        else:
+            white = np.zeros(
+                (current_frame.shape[0], current_frame.shape[1], 3), dtype=np.uint8)
+            white.fill(255)
+            result = white
+
+    return result
 
 
 def effect_of_face_swapping(target_image, new_face=None):
@@ -897,11 +904,43 @@ def effect_of_face_swapping(target_image, new_face=None):
         new_face = read_image_as_a_frame(os.path.join(
             STATIC_DIR, "mask.png"), with_transparency=False)
 
-    return my_dlib.face_swap(target_image, new_face)
+    self = my_dlib
+    current_frame = target_image
+
+    try:
+        result = my_dlib.face_swap(target_image, new_face)
+        self.last_frame = result
+    except Exception as e:
+        print(e)
+        if (self.last_frame.size != 0):
+            result = self.last_frame
+        else:
+            white = np.zeros(
+                (current_frame.shape[0], current_frame.shape[1], 3), dtype=np.uint8)
+            white.fill(255)
+            result = white
+
+    return result
 
 
 def effect_of_face_slimming(source_img):
-    return my_dlib.face_slimming(source_img)
+    self = my_dlib
+    current_frame = source_img 
+
+    try:
+        result = my_dlib.face_slimming(source_img)
+    except Exception as e:
+        print(e)
+        self = my_dlib
+        if (self.last_frame.size != 0):
+            result = self.last_frame
+        else:
+            white = np.zeros(
+                (current_frame.shape[0], current_frame.shape[1], 3), dtype=np.uint8)
+            white.fill(255)
+            result = white
+
+    return result
 
 
 def process_video(path_of_video, effect_function=None, save_to=None):
@@ -948,5 +987,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
 
 if __name__ == "__main__":
-    img = read_image_as_a_frame("../example/me.jpg")
-    my_dlib.face_slimming(img)
+    img = read_image_as_a_frame("../example/bbt.jpg")
+    mask = read_image_as_a_frame("../example/mask.jpeg")
+    display(effect_of_face_swapping(img, mask))
