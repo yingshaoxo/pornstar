@@ -13,8 +13,17 @@ from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
 import dlib
+import dlib.cuda as cuda
 import bz2
 import tensorflow as tf
+
+DLIB_USE_CNN = False
+try:
+    if cuda.get_num_devices() >= 1:
+        if dlib.DLIB_USE_CUDA:
+            DLIB_USE_CNN = True
+except Exception as e:
+    print(e)
 
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 
@@ -192,7 +201,16 @@ def _init_Whitening_model():
 class MyDlib:
     def __init__(self):
         print("Dlib is loading")
-        self.face_detector = dlib.get_frontal_face_detector()
+
+        if DLIB_USE_CNN:
+            dlib_cnn_face_detector_path = os.path.join(
+                ROOT_DIR, "mmod_human_face_detector.dat")
+            if not os.path.exists(dlib_cnn_face_detector_path):
+                self.download_cnn_face_detector(dlib_cnn_face_detector_path)
+            self.face_detector = dlib.cnn_face_detection_model_v1(dlib_cnn_face_detector_path)
+        else:
+            self.face_detector = dlib.get_frontal_face_detector()
+
         dlib_shape_predictor_path = os.path.join(
             ROOT_DIR, "shape_predictor_68_face_landmarks.dat")
         if not os.path.exists(dlib_shape_predictor_path):
@@ -203,19 +221,54 @@ class MyDlib:
 
         self.last_frame = np.array([])
 
+    def download_cnn_face_detector(self, save_to):
+        """Download dlib cnn face detector from network.
+        """
+        try:
+            bz2_file = save_to + ".bz2"
+            if not os.path.exists(bz2_file):
+                with urllib.request.urlopen("https://github.com/davisking/dlib-models/raw/master/mmod_human_face_detector.dat.bz2") as resp, open(bz2_file, 'wb') as out:
+                    shutil.copyfileobj(resp, out)
+            with open(bz2_file, "rb") as stream:
+                compressed_data = stream.read()
+            obj = bz2.BZ2Decompressor()
+            data = obj.decompress(compressed_data)
+            with open(save_to, "wb") as stream:
+                stream.write(data)
+        except Exception as e:
+            print(e)
+            print("\n"*5)
+            print("You may have to use VPN to use this module!")
+            print("\n"*5)
+
     def download_dlib_shape_predictor(self, save_to):
         """Download dlib shape predictor from Releases.
         """
-        bz2_file = save_to + ".bz2"
-        if not os.path.exists(bz2_file):
-            with urllib.request.urlopen("https://github.com/davisking/dlib-models/raw/master/shape_predictor_68_face_landmarks.dat.bz2") as resp, open(bz2_file, 'wb') as out:
-                shutil.copyfileobj(resp, out)
-        with open(bz2_file, "rb") as stream:
-            compressed_data = stream.read()
-        obj = bz2.BZ2Decompressor()
-        data = obj.decompress(compressed_data)
-        with open(save_to, "wb") as stream:
-            stream.write(data)
+        try:
+            bz2_file = save_to + ".bz2"
+            if not os.path.exists(bz2_file):
+                with urllib.request.urlopen("https://github.com/davisking/dlib-models/raw/master/shape_predictor_68_face_landmarks.dat.bz2") as resp, open(bz2_file, 'wb') as out:
+                    shutil.copyfileobj(resp, out)
+            with open(bz2_file, "rb") as stream:
+                compressed_data = stream.read()
+            obj = bz2.BZ2Decompressor()
+            data = obj.decompress(compressed_data)
+            with open(save_to, "wb") as stream:
+                stream.write(data)
+        except Exception as e:
+            print(e)
+            print("\n"*5)
+            print("You may have to use VPN to use this module!")
+            print("\n"*5)
+
+    def call_face_detector(self, image, upsample_num_times=0):
+        detections = self.face_detector(image, upsample_num_times)
+        if DLIB_USE_CNN:
+            rects = dlib.rectangles()
+            rects.extend([d.rect for d in detections])
+            return rects
+        else:
+            return detections
 
     def _adjust_gamma(self, image, gamma=1.0):
         # build a lookup table mapping the pixel values [0, 255] to
@@ -251,7 +304,7 @@ class MyDlib:
 
     def add_a_mask_to_face(self, frame, mask_image):
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = self.face_detector(gray_frame)
+        faces = self.call_face_detector(gray_frame)
         if len(faces) > 0:  # face found
             for face in faces:
                 x = face.left()
@@ -284,7 +337,7 @@ class MyDlib:
         original_face_new_face = np.zeros_like(original_face)  # create an empty image with the size of original image
 
         # face detection for the second image
-        faces = self.face_detector(new_face_gray)
+        faces = self.call_face_detector(new_face_gray)
         if len(faces) != 1:
             raise Exception("The second image should have a face! And only one face!")
         landmarks = self.face_predictor(new_face_gray, faces[0])
@@ -328,7 +381,7 @@ class MyDlib:
                 indexes_triangles.append(triangle)
 
         # face detection for the first image
-        faces2 = self.face_detector(original_face_gray)
+        faces2 = self.call_face_detector(original_face_gray)
         if len(faces2) == 0:
             #raise Exception("The first image should have at least one face!")
             if (self.last_frame.size != 0):
@@ -449,19 +502,16 @@ class MyDlib:
         return seamlessclone
 
     def face_slimming(self, image):
-        detector = self.face_detector
-        predictor = self.face_predictor
-
         def landmark_dec_dlib_fun(img_src):
             img_gray = cv2.cvtColor(img_src, cv2.COLOR_BGR2GRAY)
 
             land_marks = []
 
-            rects = detector(img_gray, 0)
+            rects = self.call_face_detector(img_gray, 0)
 
             for i in range(len(rects)):
                 land_marks_node = np.matrix(
-                    [[p.x, p.y] for p in predictor(img_gray, rects[i]).parts()])
+                    [[p.x, p.y] for p in self.face_predictor(img_gray, rects[i]).parts()])
                 land_marks.append(land_marks_node)
 
             return land_marks
@@ -925,7 +975,7 @@ def effect_of_face_swapping(target_image, new_face=None):
 
 def effect_of_face_slimming(source_img):
     self = my_dlib
-    current_frame = source_img 
+    current_frame = source_img
 
     try:
         result = my_dlib.face_slimming(source_img)
@@ -987,6 +1037,6 @@ def process_camera(device=0, effect_function=None, save_to=None):
 
 
 if __name__ == "__main__":
-    img = read_image_as_a_frame("../example/bbt.jpg")
+    img = read_image_as_a_frame("../example/trump.jpg")
     mask = read_image_as_a_frame("../example/mask.jpeg")
-    display(effect_of_face_swapping(img, mask))
+    display(my_dlib.face_slimming(img))

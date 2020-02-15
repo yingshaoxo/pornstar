@@ -11,4 +11,4 @@ def my_handler(frame):
     return frame
 
 
-pornstar.process_video("./video.mp4", my_handler, "./output.mp4")
+pornstar.process_video("./input.mp4", my_handler, "./output.mp4")
