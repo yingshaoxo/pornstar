@@ -321,6 +321,22 @@ class MyDlib:
         else:  # no face at all
             raise Exception("No face found!")
 
+    def get_face(self, frame):
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = self.call_face_detector(gray_frame)
+        assert len(faces) > 0, "We need al least one face!"
+
+        face = faces[0]
+        x = face.left()
+        y = face.top()
+        w = face.right()
+        h = face.bottom()
+
+        image = Image.fromarray(frame, mode="RGB")
+        your_face = image.crop((x,y,w,h))
+
+        return np.array(your_face).astype(np.uint8)
+
     def face_swap(self, original_face, new_face):
         def extract_index_nparray(nparray):
             index = None
@@ -699,9 +715,11 @@ def save_a_frame_as_an_image(path_of_image, frame):
     try:
         if isinstance(path_of_image, np.ndarray):
             if type(frame) == str:
+                # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 cv2.imwrite(frame, path_of_image)
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        cv2.imwrite(path_of_image, frame)
+        else:
+            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            cv2.imwrite(path_of_image, frame)
     except Exception as e:
         print(e)
         print("Example: save_a_frame_as_an_image(path_of_image, frame)")
