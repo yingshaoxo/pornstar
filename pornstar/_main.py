@@ -696,8 +696,15 @@ def display(*frames):
 
 
 def save_a_frame_as_an_image(path_of_image, frame):
-    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    cv2.imwrite(path_of_image, frame)
+    try:
+        if isinstance(path_of_image, np.ndarray):
+            if type(frame) == str:
+                cv2.imwrite(frame, path_of_image)
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        cv2.imwrite(path_of_image, frame)
+    except Exception as e:
+        print(e)
+        print("Example: save_a_frame_as_an_image(path_of_image, frame)")
 
 
 def get_masked_image(frame, mask):
