@@ -1,4 +1,6 @@
 # coding: utf-8
+from ._CV2_filters import Gingham
+from ._PIL_filters import oil_painting
 from auto_everything.base import Terminal
 from pathlib import Path
 from moviepy.editor import VideoFileClip
@@ -27,6 +29,7 @@ except Exception as e:
 
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 
+# tensorflow 2 only
 TENSORFLOW2 = 3 > int(tf.__version__[0]) > 1
 if TENSORFLOW2:  # tensorflow 2.0
     if __name__ == "__main__":
@@ -35,14 +38,6 @@ if TENSORFLOW2:  # tensorflow 2.0
         from ._deeplab import Deeplabv3
 
     from tensorflow.keras.models import load_model as _keras_load_model
-else:
-    from keras.models import load_model as _keras_load_model
-    from ._coco import CocoConfig as _CocoConfig
-    from ._model import MaskRCNN as _MaskRCNN
-    from ._utils import download_trained_weights as _download_trained_weights
-    from ._utils import download_dlib_shape_predictor as _download_dlib_shape_predictor
-    from ._PIL_filters import oil_painting
-    from ._CV2_filters import Gingham
 
 
 terminal = Terminal()
@@ -128,58 +123,6 @@ if (TENSORFLOW2):
             cropped_mask = resized_mask[x:x+old_width, y:y+old_height].copy()
 
             return cropped_mask
-else:
-    class _InferenceConfig(_CocoConfig):
-        # Set batch size to 1 since we'll be running inference on
-        # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-        GPU_COUNT = 1
-        IMAGES_PER_GPU = 1
-        USE_MINI_MASK = False
-
-    # COCO Class names
-    # Index of the class in the list is its ID. For example, to get ID of
-    # the teddy bear class, use: class_names.index('teddy bear')
-    _class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
-                    'bus', 'train', 'truck', 'boat', 'traffic light',
-                    'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird',
-                    'cat', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear',
-                    'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie',
-                    'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-                    'kite', 'baseball bat', 'baseball glove', 'skateboard',
-                    'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup',
-                    'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-                    'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
-                    'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed',
-                    'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote',
-                    'keyboard', 'cell phone', 'microwave', 'oven', 'toaster',
-                    'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
-                    'teddy bear', 'hair drier', 'toothbrush']
-
-    def _init_MASK_RCNN_model():
-        # Directory to save logs and trained model
-        MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-
-        # Local path to trained weights file
-        COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
-        # Download COCO trained weights from Releases if needed
-        if not os.path.exists(COCO_MODEL_PATH):
-            _download_trained_weights(COCO_MODEL_PATH)
-
-        # ## Configurations
-        config = _InferenceConfig()
-        config.display()
-
-        # Create model object in inference mode.
-        model = _MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
-
-        # Load weights trained on MS-COCO
-        try:
-            model.load_weights(COCO_MODEL_PATH, by_name=True)
-        except Exception as e:
-            print(e)
-            print(f"you should check {COCO_MODEL_PATH}, to see if that file exists")
-
-        return model
 
 
 def _init_Whitening_model():
@@ -333,7 +276,7 @@ class MyDlib:
         h = face.bottom()
 
         image = Image.fromarray(frame, mode="RGB")
-        your_face = image.crop((x,y,w,h))
+        your_face = image.crop((x, y, w, h))
 
         return np.array(your_face).astype(np.uint8)
 

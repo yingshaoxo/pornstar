@@ -36,5 +36,6 @@ setup(
         'moviepy',
         'dlib',
         'opencv-python',
+        'tensorflow',
     ]
 )

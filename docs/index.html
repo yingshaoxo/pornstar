@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.4" />
+<meta name="generator" content="pdoc 0.8.3" />
 <title>pornstar._main API documentation</title>
 <meta name="description" content="" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -25,6 +27,8 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># coding: utf-8
+from ._CV2_filters import Gingham
+from ._PIL_filters import oil_painting
 from auto_everything.base import Terminal
 from pathlib import Path
 from moviepy.editor import VideoFileClip
@@ -53,6 +57,7 @@ except Exception as e:
 
 os.environ[&#39;KERAS_BACKEND&#39;] = &#39;tensorflow&#39;
 
+# tensorflow 2 only
 TENSORFLOW2 = 3 &gt; int(tf.__version__[0]) &gt; 1
 if TENSORFLOW2:  # tensorflow 2.0
     if __name__ == &#34;__main__&#34;:
@@ -61,14 +66,6 @@ if TENSORFLOW2:  # tensorflow 2.0
         from ._deeplab import Deeplabv3
 
     from tensorflow.keras.models import load_model as _keras_load_model
-else:
-    from keras.models import load_model as _keras_load_model
-    from ._coco import CocoConfig as _CocoConfig
-    from ._model import MaskRCNN as _MaskRCNN
-    from ._utils import download_trained_weights as _download_trained_weights
-    from ._utils import download_dlib_shape_predictor as _download_dlib_shape_predictor
-    from ._PIL_filters import oil_painting
-    from ._CV2_filters import Gingham
 
 
 terminal = Terminal()
@@ -154,58 +151,6 @@ if (TENSORFLOW2):
             cropped_mask = resized_mask[x:x+old_width, y:y+old_height].copy()
 
             return cropped_mask
-else:
-    class _InferenceConfig(_CocoConfig):
-        # Set batch size to 1 since we&#39;ll be running inference on
-        # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-        GPU_COUNT = 1
-        IMAGES_PER_GPU = 1
-        USE_MINI_MASK = False
-
-    # COCO Class names
-    # Index of the class in the list is its ID. For example, to get ID of
-    # the teddy bear class, use: class_names.index(&#39;teddy bear&#39;)
-    _class_names = [&#39;BG&#39;, &#39;person&#39;, &#39;bicycle&#39;, &#39;car&#39;, &#39;motorcycle&#39;, &#39;airplane&#39;,
-                    &#39;bus&#39;, &#39;train&#39;, &#39;truck&#39;, &#39;boat&#39;, &#39;traffic light&#39;,
-                    &#39;fire hydrant&#39;, &#39;stop sign&#39;, &#39;parking meter&#39;, &#39;bench&#39;, &#39;bird&#39;,
-                    &#39;cat&#39;, &#39;dog&#39;, &#39;horse&#39;, &#39;sheep&#39;, &#39;cow&#39;, &#39;elephant&#39;, &#39;bear&#39;,
-                    &#39;zebra&#39;, &#39;giraffe&#39;, &#39;backpack&#39;, &#39;umbrella&#39;, &#39;handbag&#39;, &#39;tie&#39;,
-                    &#39;suitcase&#39;, &#39;frisbee&#39;, &#39;skis&#39;, &#39;snowboard&#39;, &#39;sports ball&#39;,
-                    &#39;kite&#39;, &#39;baseball bat&#39;, &#39;baseball glove&#39;, &#39;skateboard&#39;,
-                    &#39;surfboard&#39;, &#39;tennis racket&#39;, &#39;bottle&#39;, &#39;wine glass&#39;, &#39;cup&#39;,
-                    &#39;fork&#39;, &#39;knife&#39;, &#39;spoon&#39;, &#39;bowl&#39;, &#39;banana&#39;, &#39;apple&#39;,
-                    &#39;sandwich&#39;, &#39;orange&#39;, &#39;broccoli&#39;, &#39;carrot&#39;, &#39;hot dog&#39;, &#39;pizza&#39;,
-                    &#39;donut&#39;, &#39;cake&#39;, &#39;chair&#39;, &#39;couch&#39;, &#39;potted plant&#39;, &#39;bed&#39;,
-                    &#39;dining table&#39;, &#39;toilet&#39;, &#39;tv&#39;, &#39;laptop&#39;, &#39;mouse&#39;, &#39;remote&#39;,
-                    &#39;keyboard&#39;, &#39;cell phone&#39;, &#39;microwave&#39;, &#39;oven&#39;, &#39;toaster&#39;,
-                    &#39;sink&#39;, &#39;refrigerator&#39;, &#39;book&#39;, &#39;clock&#39;, &#39;vase&#39;, &#39;scissors&#39;,
-                    &#39;teddy bear&#39;, &#39;hair drier&#39;, &#39;toothbrush&#39;]
-
-    def _init_MASK_RCNN_model():
-        # Directory to save logs and trained model
-        MODEL_DIR = os.path.join(ROOT_DIR, &#34;logs&#34;)
-
-        # Local path to trained weights file
-        COCO_MODEL_PATH = os.path.join(ROOT_DIR, &#34;mask_rcnn_coco.h5&#34;)
-        # Download COCO trained weights from Releases if needed
-        if not os.path.exists(COCO_MODEL_PATH):
-            _download_trained_weights(COCO_MODEL_PATH)
-
-        # ## Configurations
-        config = _InferenceConfig()
-        config.display()
-
-        # Create model object in inference mode.
-        model = _MaskRCNN(mode=&#34;inference&#34;, model_dir=MODEL_DIR, config=config)
-
-        # Load weights trained on MS-COCO
-        try:
-            model.load_weights(COCO_MODEL_PATH, by_name=True)
-        except Exception as e:
-            print(e)
-            print(f&#34;you should check {COCO_MODEL_PATH}, to see if that file exists&#34;)
-
-        return model
 
 
 def _init_Whitening_model():
@@ -359,7 +304,7 @@ class MyDlib:
         h = face.bottom()
 
         image = Image.fromarray(frame, mode=&#34;RGB&#34;)
-        your_face = image.crop((x,y,w,h))
+        your_face = image.crop((x, y, w, h))
 
         return np.array(your_face).astype(np.uint8)
 
@@ -1104,7 +1049,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">combine_two_frame</span></span>(<span>frame1, frame2)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1117,12 +1062,12 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">display</span></span>(<span>*frames)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Display a list of images in a single figure with matplotlib.</p>
+<div class="desc"><p>Display a list of images in a single figure with matplotlib.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>images</code></strong> :&ensp;<code>List</code> of <code>frames</code>(<code>np.arrays</code>)</dt>
+<dt><strong><code>images</code></strong> :&ensp;<code>List</code> of <code>frames(np.arrays)</code></dt>
 <dd>&nbsp;</dd>
-</dl></section>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1169,7 +1114,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_adding_a_mask_to_face</span></span>(<span>frame, mask_image=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1201,7 +1146,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_blur</span></span>(<span>frame, kernel=None, method=1)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1227,7 +1172,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_blur_for_skin</span></span>(<span>frame, kernel=9)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1240,7 +1185,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_face_slimming</span></span>(<span>source_img)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1269,7 +1214,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_face_swapping</span></span>(<span>target_image, new_face=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1302,7 +1247,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_oil_painting</span></span>(<span>frame)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1318,7 +1263,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_pure_white</span></span>(<span>frame)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1333,7 +1278,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_whitening</span></span>(<span>frame, whiten_level=5.0, target_mask=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1377,7 +1322,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_whitening_with_a_top_layer</span></span>(<span>frame, target_mask=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1396,7 +1341,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">effect_of_whitening_with_neural_network</span></span>(<span>frame, target_mask=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1429,7 +1374,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">get_human_and_background_masks_from_a_frame</span></span>(<span>frame)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1479,7 +1424,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">get_masked_image</span></span>(<span>frame, mask)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1493,7 +1438,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">process_camera</span></span>(<span>device=0, effect_function=None, save_to=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1523,7 +1468,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">process_video</span></span>(<span>path_of_video, effect_function=None, save_to=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1554,7 +1499,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">read_image_as_a_frame</span></span>(<span>path_of_image, with_transparency=False)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1573,7 +1518,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">save_a_frame_as_an_image</span></span>(<span>path_of_image, frame)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1596,7 +1541,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">stylize_background</span></span>(<span>frame, stylize_function_list=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1624,7 +1569,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">stylize_background_and_human_body</span></span>(<span>frame, background_stylize_function_list=None, human_body_stylize_function_list=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1661,7 +1606,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">stylize_human_body</span></span>(<span>frame, stylize_function_list=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1690,7 +1635,7 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">stylize_the_whole_image</span></span>(<span>frame, stylize_function_list=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1714,7 +1659,7 @@ if __name__ == &#34;__main__&#34;:
 <span>class <span class="ident">MyDeepLab</span></span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1791,61 +1736,11 @@ if __name__ == &#34;__main__&#34;:
 <dl>
 <dt id="pornstar._main.MyDeepLab.label_names"><code class="name">var <span class="ident">label_names</span></code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 </dd>
 <dt id="pornstar._main.MyDeepLab.model"><code class="name">var <span class="ident">model</span></code></dt>
 <dd>
-<section class="desc"><p><code>Model</code> groups layers into an object with training and inference features.</p>
-<p>There are two ways to instantiate a <code>Model</code>:</p>
-<p>1 - With the "functional API", where you start from <code>Input</code>,
-you chain layer calls to specify the model's forward pass,
-and finally you create your model from inputs and outputs:</p>
-<pre><code class="python">import tensorflow as tf
-
-inputs = tf.keras.Input(shape=(3,))
-x = tf.keras.layers.Dense(4, activation=tf.nn.relu)(inputs)
-outputs = tf.keras.layers.Dense(5, activation=tf.nn.softmax)(x)
-model = tf.keras.Model(inputs=inputs, outputs=outputs)
-</code></pre>
-<p>2 - By subclassing the <code>Model</code> class: in that case, you should define your
-layers in <code>__init__</code> and you should implement the model's forward pass
-in <code>call</code>.</p>
-<pre><code class="python">import tensorflow as tf
-
-class MyModel(tf.keras.Model):
-
-  def __init__(self):
-    super(MyModel, self).__init__()
-    self.dense1 = tf.keras.layers.Dense(4, activation=tf.nn.relu)
-    self.dense2 = tf.keras.layers.Dense(5, activation=tf.nn.softmax)
-
-  def call(self, inputs):
-    x = self.dense1(inputs)
-    return self.dense2(x)
-
-model = MyModel()
-</code></pre>
-<p>If you subclass <code>Model</code>, you can optionally have
-a <code>training</code> argument (boolean) in <code>call</code>, which you can use to specify
-a different behavior in training and inference:</p>
-<pre><code class="python">import tensorflow as tf
-
-class MyModel(tf.keras.Model):
-
-  def __init__(self):
-    super(MyModel, self).__init__()
-    self.dense1 = tf.keras.layers.Dense(4, activation=tf.nn.relu)
-    self.dense2 = tf.keras.layers.Dense(5, activation=tf.nn.softmax)
-    self.dropout = tf.keras.layers.Dropout(0.5)
-
-  def call(self, inputs, training=False):
-    x = self.dense1(inputs)
-    if training:
-      x = self.dropout(x, training=training)
-    return self.dense2(x)
-
-model = MyModel()
-</code></pre></section>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -1854,7 +1749,7 @@ model = MyModel()
 <span>def <span class="ident">get_human_mask</span></span>(<span>self, labels)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1873,7 +1768,7 @@ model = MyModel()
 <span>def <span class="ident">predict</span></span>(<span>self, image)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1920,7 +1815,7 @@ model = MyModel()
 <span>def <span class="ident">scale_up_mask</span></span>(<span>self, mask, factor=1.5)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1946,7 +1841,7 @@ model = MyModel()
 <span>class <span class="ident">MyDlib</span></span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2086,7 +1981,7 @@ model = MyModel()
         h = face.bottom()
 
         image = Image.fromarray(frame, mode=&#34;RGB&#34;)
-        your_face = image.crop((x,y,w,h))
+        your_face = image.crop((x, y, w, h))
 
         return np.array(your_face).astype(np.uint8)
 
@@ -2397,7 +2292,7 @@ model = MyModel()
 <span>def <span class="ident">add_a_mask_to_face</span></span>(<span>self, frame, mask_image)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2426,7 +2321,7 @@ model = MyModel()
 <span>def <span class="ident">add_image_to_the_top_of_another</span></span>(<span>self, background_img, top_img, x, y, overlay_size=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2458,7 +2353,7 @@ model = MyModel()
 <span>def <span class="ident">call_face_detector</span></span>(<span>self, image, upsample_num_times=0)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2477,7 +2372,7 @@ model = MyModel()
 <span>def <span class="ident">download_cnn_face_detector</span></span>(<span>self, save_to)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Download dlib cnn face detector from network.</p></section>
+<div class="desc"><p>Download dlib cnn face detector from network.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2507,7 +2402,7 @@ model = MyModel()
 <span>def <span class="ident">download_dlib_shape_predictor</span></span>(<span>self, save_to)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Download dlib shape predictor from Releases.</p></section>
+<div class="desc"><p>Download dlib shape predictor from Releases.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2537,7 +2432,7 @@ model = MyModel()
 <span>def <span class="ident">face_slimming</span></span>(<span>self, image)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2668,7 +2563,7 @@ model = MyModel()
 <span>def <span class="ident">face_swap</span></span>(<span>self, original_face, new_face)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2858,7 +2753,7 @@ model = MyModel()
 <span>def <span class="ident">get_face</span></span>(<span>self, frame)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2875,7 +2770,7 @@ model = MyModel()
     h = face.bottom()
 
     image = Image.fromarray(frame, mode=&#34;RGB&#34;)
-    your_face = image.crop((x,y,w,h))
+    your_face = image.crop((x, y, w, h))
 
     return np.array(your_face).astype(np.uint8)</code></pre>
 </details>
@@ -2948,9 +2843,7 @@ model = MyModel()
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

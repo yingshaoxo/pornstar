@@ -12,7 +12,7 @@ class Tools():
 
     def compile(self):
         commands = """
-python3 -m nuitka --module pornstar --include-package=pornstar._utils,pornstar._deeplab,pornstar._coco,pornstar._config,pornstar._main,pornstar._PIL_filters,pornstar._CV2_filters --output-dir=build
+python3 -m nuitka --module pornstar --include-package=pornstar._deeplab,pornstar._main,pornstar._PIL_filters,pornstar._CV2_filters --output-dir=build
         """
         t.run(commands)
 
@@ -35,6 +35,7 @@ git reset --hard HEAD^
 
     def make_docs(self):
         t.run("""
+sudo pip3 install pdoc3
 mkdir docs
 rm docs/* -fr
 pdoc --html --output-dir docs pornstar._main 
@@ -43,14 +44,16 @@ rm docs/pornstar -fr
         """)
 
     def install(self):
-        self.make_docs()
+        #self.make_docs()
         t.run("""
 sudo rm -fr dist
 sudo rm -fr build
-sudo -H python3 setup.py sdist bdist_wheel
-cd dist
 sudo pip3 uninstall -y pornstar
-sudo pip3 install *
+sudo -H python3 setup.py sdist bdist_wheel
+#cd dist
+#sudo pip3 install auto_everything*
+sudo pip3 install -e .
+#cd ..
 """)
 
     def publish(self):
