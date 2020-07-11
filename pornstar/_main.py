@@ -983,7 +983,7 @@ def process_video(path_of_video, effect_function=None, save_to=None):
     modified_clip.write_videofile(save_to)
 
 
-def process_camera(device=0, effect_function=None, save_to=None):
+def process_camera(device=0, effect_function=None, show=True):
     def return_the_same_frame(frame):
         return frame
 
@@ -996,9 +996,10 @@ def process_camera(device=0, effect_function=None, save_to=None):
         ret, frame = cap.read()
         frame = effect_function(frame)
 
-        cv2.imshow(f"yingshaoxo's camera {str(device)}", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        if show:
+            cv2.imshow(f"yingshaoxo's camera {str(device)}", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
     cap.release()
     cv2.destroyAllWindows()
