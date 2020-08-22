@@ -4,7 +4,7 @@ A Python library to make you become the next famous pornstar!
 
 > It's also a gift to www.pornhub.com.
 
-> I always think for those outstanding otaku, pornhub would be the most visited website on their phone.
+> I always think for those outstanding otaku, pornhub would be the second visited website on their phone. (github should in the top)
 
 ### Docs
 https://yingshaoxo.github.io/pornstar

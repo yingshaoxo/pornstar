@@ -1011,7 +1011,7 @@ def process_video(path_of_video, effect_function=None, save_to=None):
     modified_clip.write_videofile(save_to)
 
 
-def process_camera(device=0, effect_function=None, save_to=None):
+def process_camera(device=0, effect_function=None, show=True):
     def return_the_same_frame(frame):
         return frame
 
@@ -1024,9 +1024,10 @@ def process_camera(device=0, effect_function=None, save_to=None):
         ret, frame = cap.read()
         frame = effect_function(frame)
 
-        cv2.imshow(f&#34;yingshaoxo&#39;s camera {str(device)}&#34;, frame)
-        if cv2.waitKey(1) &amp; 0xFF == ord(&#39;q&#39;):
-            break
+        if show:
+            cv2.imshow(f&#34;yingshaoxo&#39;s camera {str(device)}&#34;, frame)
+            if cv2.waitKey(1) &amp; 0xFF == ord(&#39;q&#39;):
+                break
 
     cap.release()
     cv2.destroyAllWindows()
@@ -1435,7 +1436,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="pornstar._main.process_camera"><code class="name flex">
-<span>def <span class="ident">process_camera</span></span>(<span>device=0, effect_function=None, save_to=None)</span>
+<span>def <span class="ident">process_camera</span></span>(<span>device=0, effect_function=None, show=True)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1443,7 +1444,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def process_camera(device=0, effect_function=None, save_to=None):
+<pre><code class="python">def process_camera(device=0, effect_function=None, show=True):
     def return_the_same_frame(frame):
         return frame
 
@@ -1456,9 +1457,10 @@ if __name__ == &#34;__main__&#34;:
         ret, frame = cap.read()
         frame = effect_function(frame)
 
-        cv2.imshow(f&#34;yingshaoxo&#39;s camera {str(device)}&#34;, frame)
-        if cv2.waitKey(1) &amp; 0xFF == ord(&#39;q&#39;):
-            break
+        if show:
+            cv2.imshow(f&#34;yingshaoxo&#39;s camera {str(device)}&#34;, frame)
+            if cv2.waitKey(1) &amp; 0xFF == ord(&#39;q&#39;):
+                break
 
     cap.release()
     cv2.destroyAllWindows()</code></pre>
