@@ -4,7 +4,7 @@ A Python library to make you become the next famous pornstar!
 
 > It's also a gift to www.pornhub.com.
 
-> I always think for those outstanding otaku, pornhub would be the second visited website on their phone. (github should in the top)
+> I always think for those outstanding otaku, pornhub would be the second most visited website on their phone. (github should be the first)
 
 ### Docs
 https://yingshaoxo.github.io/pornstar
@@ -16,7 +16,7 @@ https://yingshaoxo.github.io/pornstar
 * add a mask to your face
 * faceswap
 * face slimming
-* support only `tensorflow2.0`
+* `tensorflow2.0` only
 
 ![Feature1](Feature_0.png)
 
@@ -25,6 +25,8 @@ https://yingshaoxo.github.io/pornstar
 ![Feature2](Feature_2.png)
 
 ![Feature3](Feature_3.png)
+
+> trump is the best!
 
 
 ### Installation

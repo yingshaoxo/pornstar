@@ -15,12 +15,12 @@ from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
 import dlib
-import dlib.cuda as cuda
 import bz2
-import tensorflow as tf
 
 DLIB_USE_CNN = False
 try:
+    import dlib.cuda as cuda
+
     if cuda.get_num_devices() >= 1:
         if dlib.DLIB_USE_CUDA:
             DLIB_USE_CNN = True
@@ -29,19 +29,14 @@ except Exception as e:
 
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 
-# tensorflow 2 only
-TENSORFLOW2 = 3 > int(tf.__version__[0]) > 1
-if TENSORFLOW2:  # tensorflow 2.0
-    if __name__ == "__main__":
-        from _deeplab import Deeplabv3
-    else:
-        from ._deeplab import Deeplabv3
+if __name__ == "__main__":
+    from _deeplab import Deeplabv3
+else:
+    from ._deeplab import Deeplabv3
 
-    from tensorflow.keras.models import load_model as _keras_load_model
-
+from tensorflow.keras.models import load_model as _keras_load_model
 
 terminal = Terminal()
-
 
 # Static directory of this module
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -54,75 +49,73 @@ if not terminal.exists(ROOT_DIR):
 logging.basicConfig(filename=os.path.join(ROOT_DIR, "_main.log"),
                     level=logging.DEBUG, filemode='w', format='%(levelname)s - %(message)s')
 
+class MyDeepLab():
+    label_names = np.asarray([
+        'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
+        'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike',
+        'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tv'
+    ])
+    model = Deeplabv3(backbone='xception', OS=16)
 
-if (TENSORFLOW2):
-    class MyDeepLab():
-        label_names = np.asarray([
-            'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
-            'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike',
-            'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tv'
-        ])
-        model = Deeplabv3(backbone='xception', OS=16)
+    def predict(self, image):
+        # image = np.array(Image.open(image_path)
 
-        def predict(self, image):
-            # image = np.array(Image.open(image_path)
+        # Generates labels using most basic setup.  Supports various image sizes.  Returns image labels in same format
+        # as original image.  Normalization matches MobileNetV2
+        trained_image_width = 512
+        mean_subtraction_value = 127.5
 
-            # Generates labels using most basic setup.  Supports various image sizes.  Returns image labels in same format
-            # as original image.  Normalization matches MobileNetV2
-            trained_image_width = 512
-            mean_subtraction_value = 127.5
+        # resize to max dimension of images from training dataset
+        w, h, _ = image.shape
+        ratio = float(trained_image_width) / np.max([w, h])
+        resized_image = np.array(Image.fromarray(image.astype(
+            'uint8')).resize((int(ratio * h), int(ratio * w))))
 
-            # resize to max dimension of images from training dataset
-            w, h, _ = image.shape
-            ratio = float(trained_image_width) / np.max([w, h])
-            resized_image = np.array(Image.fromarray(image.astype(
-                'uint8')).resize((int(ratio * h), int(ratio * w))))
+        # apply normalization for trained dataset images
+        resized_image = (resized_image / mean_subtraction_value) - 1.
 
-            # apply normalization for trained dataset images
-            resized_image = (resized_image / mean_subtraction_value) - 1.
+        # pad array to square image to match training imagessqueeze()
+        pad_x = int(trained_image_width - resized_image.shape[0])
+        pad_y = int(trained_image_width - resized_image.shape[1])
+        resized_image = np.pad(
+            resized_image, ((0, pad_x), (0, pad_y), (0, 0)), mode='constant')
 
-            # pad array to square image to match training imagessqueeze()
-            pad_x = int(trained_image_width - resized_image.shape[0])
-            pad_y = int(trained_image_width - resized_image.shape[1])
-            resized_image = np.pad(
-                resized_image, ((0, pad_x), (0, pad_y), (0, 0)), mode='constant')
+        # do prediction
+        res = self.model.predict(np.expand_dims(resized_image, 0))
+        labels = np.argmax(res.squeeze(), -1)
 
-            # do prediction
-            res = self.model.predict(np.expand_dims(resized_image, 0))
-            labels = np.argmax(res.squeeze(), -1)
+        # remove padding and resize back to original image
+        if pad_x > 0:
+            labels = labels[:-pad_x]
+        if pad_y > 0:
+            labels = labels[:, :-pad_y]
+        labels = np.array(Image.fromarray(
+            labels.astype('uint8')).resize((h, w)))
 
-            # remove padding and resize back to original image
-            if pad_x > 0:
-                labels = labels[:-pad_x]
-            if pad_y > 0:
-                labels = labels[:, :-pad_y]
-            labels = np.array(Image.fromarray(
-                labels.astype('uint8')).resize((h, w)))
+        return labels
 
-            return labels
+    def get_human_mask(self, labels):
+        human_index = np.where(self.label_names == "person")[0]
+        if (human_index.size == 0):
+            return np.array([])
+        else:
+            human_index = human_index[0]
+            human_values = (labels == human_index).astype(np.uint8)
+            return np.expand_dims(human_values, axis=2)
 
-        def get_human_mask(self, labels):
-            human_index = np.where(self.label_names == "person")[0]
-            if (human_index.size == 0):
-                return np.array([])
-            else:
-                human_index = human_index[0]
-                human_values = (labels == human_index).astype(np.uint8)
-                return np.expand_dims(human_values, axis=2)
+    def scale_up_mask(self, mask, factor=1.5):
+        if factor < 1:
+            return mask
 
-        def scale_up_mask(self, mask, factor=1.5):
-            if factor < 1:
-                return mask
+        old_width, old_height, _ = mask.shape
+        x = int(((factor - 1) * old_width) / 2)
+        y = int(((factor - 1) * old_height) / 2)
 
-            old_width, old_height, _ = mask.shape
-            x = int(((factor - 1) * old_width) / 2)
-            y = int(((factor - 1) * old_height) / 2)
+        resized_mask = cv2.resize(mask, (0, 0), fx=factor, fy=factor)
+        resized_mask = np.expand_dims(resized_mask, axis=2)
+        cropped_mask = resized_mask[x:x + old_width, y:y + old_height].copy()
 
-            resized_mask = cv2.resize(mask, (0, 0), fx=factor, fy=factor)
-            resized_mask = np.expand_dims(resized_mask, axis=2)
-            cropped_mask = resized_mask[x:x+old_width, y:y+old_height].copy()
-
-            return cropped_mask
+        return cropped_mask
 
 
 def _init_Whitening_model():
@@ -132,7 +125,9 @@ def _init_Whitening_model():
     # Download it from Releases if needed
     if not os.path.exists(MODEL_PATH):
         print(f"Start to download {MODEL_FILE_NAME}...")
-        with urllib.request.urlopen("https://github.com/yingshaoxo/pornstar/raw/master/models/" + MODEL_FILE_NAME) as resp, open(MODEL_PATH, 'wb') as out:
+        with urllib.request.urlopen(
+                "https://github.com/yingshaoxo/pornstar/raw/master/models/" + MODEL_FILE_NAME) as resp, open(MODEL_PATH,
+                                                                                                             'wb') as out:
             shutil.copyfileobj(resp, out)
         print(f"{MODEL_FILE_NAME} was downloaded!")
 
@@ -170,7 +165,9 @@ class MyDlib:
         try:
             bz2_file = save_to + ".bz2"
             if not os.path.exists(bz2_file):
-                with urllib.request.urlopen("https://github.com/davisking/dlib-models/raw/master/mmod_human_face_detector.dat.bz2") as resp, open(bz2_file, 'wb') as out:
+                with urllib.request.urlopen(
+                        "https://github.com/davisking/dlib-models/raw/master/mmod_human_face_detector.dat.bz2") as resp, open(
+                        bz2_file, 'wb') as out:
                     shutil.copyfileobj(resp, out)
             with open(bz2_file, "rb") as stream:
                 compressed_data = stream.read()
@@ -180,9 +177,9 @@ class MyDlib:
                 stream.write(data)
         except Exception as e:
             print(e)
-            print("\n"*5)
+            print("\n" * 5)
             print("You may have to use VPN to use this module!")
-            print("\n"*5)
+            print("\n" * 5)
 
     def download_dlib_shape_predictor(self, save_to):
         """Download dlib shape predictor from Releases.
@@ -190,7 +187,9 @@ class MyDlib:
         try:
             bz2_file = save_to + ".bz2"
             if not os.path.exists(bz2_file):
-                with urllib.request.urlopen("https://github.com/davisking/dlib-models/raw/master/shape_predictor_68_face_landmarks.dat.bz2") as resp, open(bz2_file, 'wb') as out:
+                with urllib.request.urlopen(
+                        "https://github.com/davisking/dlib-models/raw/master/shape_predictor_68_face_landmarks.dat.bz2") as resp, open(
+                        bz2_file, 'wb') as out:
                     shutil.copyfileobj(resp, out)
             with open(bz2_file, "rb") as stream:
                 compressed_data = stream.read()
@@ -200,9 +199,9 @@ class MyDlib:
                 stream.write(data)
         except Exception as e:
             print(e)
-            print("\n"*5)
+            print("\n" * 5)
             print("You may have to use VPN to use this module!")
-            print("\n"*5)
+            print("\n" * 5)
 
     def call_face_detector(self, image, upsample_num_times=0):
         detections = self.face_detector(image, upsample_num_times)
@@ -342,7 +341,7 @@ class MyDlib:
         # face detection for the first image
         faces2 = self.call_face_detector(original_face_gray)
         if len(faces2) == 0:
-            #raise Exception("The first image should have at least one face!")
+            # raise Exception("The first image should have at least one face!")
             if (self.last_frame.size != 0):
                 frame = self.last_frame
             else:
@@ -389,9 +388,9 @@ class MyDlib:
                 cropped_triangle = cv2.bitwise_and(cropped_triangle, cropped_triangle,
                                                    mask=cropped_tr1_mask)
 
-                #cv2.line(new_face, tr1_pt1, tr1_pt2, (0, 0, 255), 2)
-                #cv2.line(new_face, tr1_pt3, tr1_pt2, (0, 0, 255), 2)
-                #cv2.line(new_face, tr1_pt1, tr1_pt3, (0, 0, 255), 2)
+                # cv2.line(new_face, tr1_pt1, tr1_pt2, (0, 0, 255), 2)
+                # cv2.line(new_face, tr1_pt3, tr1_pt2, (0, 0, 255), 2)
+                # cv2.line(new_face, tr1_pt1, tr1_pt3, (0, 0, 255), 2)
 
                 # Triangulation of first face
                 tr2_pt1 = landmarks_points2[triangle_index[0]]
@@ -408,27 +407,28 @@ class MyDlib:
                                     [tr2_pt2[0] - x, tr2_pt2[1] - y],
                                     [tr2_pt3[0] - x, tr2_pt3[1] - y]], np.int32)
 
-                #cv2.fillConvexPoly(cropped_tr2_mask, points2, 255)
+                # cv2.fillConvexPoly(cropped_tr2_mask, points2, 255)
                 # cropped_triangle2 = cv2.bitwise_and(cropped_triangle2, cropped_triangle2,
                 #                                    mask=cropped_tr2_mask)
 
-                #cv2.line(original_face, tr2_pt1, tr2_pt2, (0, 0, 255), 2)
-                #cv2.line(original_face, tr2_pt3, tr2_pt2, (0, 0, 255), 2)
-                #cv2.line(original_face, tr2_pt1, tr2_pt3, (0, 0, 255), 2)
+                # cv2.line(original_face, tr2_pt1, tr2_pt2, (0, 0, 255), 2)
+                # cv2.line(original_face, tr2_pt3, tr2_pt2, (0, 0, 255), 2)
+                # cv2.line(original_face, tr2_pt1, tr2_pt3, (0, 0, 255), 2)
 
                 # Warp triangles
                 # We convert the first image triangle to second inage triangle. warpAffine() is the key function for doing that
                 points = np.float32(points)
                 points2 = np.float32(points2)
                 M = cv2.getAffineTransform(points, points2)
-                warped_triangle = cv2.warpAffine(cropped_triangle, M, (w, h), flags=cv2.INTER_NEAREST, borderValue=(0, 0, 0))
+                warped_triangle = cv2.warpAffine(cropped_triangle, M, (w, h), flags=cv2.INTER_NEAREST,
+                                                 borderValue=(0, 0, 0))
 
                 # Reconstructing destination face
                 target_index = np.any(warped_triangle != [0, 0, 0], axis=-1)
                 original_face_new_face[y: y + h, x: x + w][target_index] = warped_triangle[target_index]
 
                 # cv2.imshow("piece", warped_triangle) # keep press esc to see the generating process dynamiclly
-                #cv2.imshow("how we generate the new face", original_face_new_face)
+                # cv2.imshow("how we generate the new face", original_face_new_face)
                 # cv2.waitKey(0)
 
         # Face swapped (putting 1st face into 2nd face)
@@ -441,20 +441,21 @@ class MyDlib:
             original_face_head_noface = cv2.bitwise_and(seamlessclone, seamlessclone, mask=original_face_face_mask)
             result = cv2.add(original_face_head_noface, original_face_new_face)
 
-            #(x, y, w, h) = cv2.boundingRect(convexhull2)
-            #center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
-            #seamlessclone = cv2.seamlessClone(result, original_face, original_face_head_mask, center_face2, cv2.NORMAL_CLONE)
+            # (x, y, w, h) = cv2.boundingRect(convexhull2)
+            # center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
+            # seamlessclone = cv2.seamlessClone(result, original_face, original_face_head_mask, center_face2, cv2.NORMAL_CLONE)
 
             (x, y, w, h) = cv2.boundingRect(original_face_head_mask)
             real_new_face = original_face_new_face[y: y + h, x: x + w]
             center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
             real_new_face_mask = original_face_head_mask[y: y + h, x: x + w]
-            seamlessclone = cv2.seamlessClone(real_new_face, seamlessclone, real_new_face_mask, center_face2, cv2.NORMAL_CLONE)  # (new_face, the_target_image, mask_of_new_face_at_target_image, the_center_point_of_new_face_at_the_target_image, cv2.MIXED_CLONE)
+            seamlessclone = cv2.seamlessClone(real_new_face, seamlessclone, real_new_face_mask, center_face2,
+                                              cv2.NORMAL_CLONE)  # (new_face, the_target_image, mask_of_new_face_at_target_image, the_center_point_of_new_face_at_the_target_image, cv2.MIXED_CLONE)
 
-        #cv2.imshow("first_img", original_face)
-        #cv2.imshow("second_img", new_face)
-        #cv2.imshow("raw_combine", result)
-        #cv2.imshow("with seamlessclone", seamlessclone)
+        # cv2.imshow("first_img", original_face)
+        # cv2.imshow("second_img", new_face)
+        # cv2.imshow("raw_combine", result)
+        # cv2.imshow("with seamlessclone", seamlessclone)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
@@ -486,22 +487,22 @@ class MyDlib:
 
             # 计算公式中的|m-c|^2
             ddmc = (endX - startX) * (endX - startX) + \
-                (endY - startY) * (endY - startY)
+                   (endY - startY) * (endY - startY)
             H, W, C = srcImg.shape
             for i in range(W):
                 for j in range(H):
                     # 计算该点是否在形变圆的范围之内
                     # 优化，第一步，直接判断是会在（startX,startY)的矩阵框中
-                    if math.fabs(i-startX) > radius and math.fabs(j-startY) > radius:
+                    if math.fabs(i - startX) > radius and math.fabs(j - startY) > radius:
                         continue
 
                     distance = (i - startX) * (i - startX) + \
-                        (j - startY) * (j - startY)
+                               (j - startY) * (j - startY)
 
-                    if(distance < ddradius):
+                    if (distance < ddradius):
                         # 计算出（i,j）坐标的原坐标
                         # 计算公式中右边平方号里的部分
-                        ratio = (ddradius-distance) / (ddradius - distance + ddmc)
+                        ratio = (ddradius - distance) / (ddradius - distance + ddmc)
                         ratio = ratio * ratio
 
                         # 映射原位置
@@ -520,17 +521,17 @@ class MyDlib:
             w, h, c = src.shape
             if c == 3:
                 x1 = int(ux)
-                x2 = x1+1
+                x2 = x1 + 1
                 y1 = int(uy)
-                y2 = y1+1
+                y2 = y1 + 1
 
-                part1 = src[y1, x1].astype(np.float)*(float(x2)-ux)*(float(y2)-uy)
-                part2 = src[y1, x2].astype(np.float)*(ux-float(x1))*(float(y2)-uy)
-                part3 = src[y2, x1].astype(np.float) * (float(x2) - ux)*(uy-float(y1))
+                part1 = src[y1, x1].astype(np.float) * (float(x2) - ux) * (float(y2) - uy)
+                part2 = src[y1, x2].astype(np.float) * (ux - float(x1)) * (float(y2) - uy)
+                part3 = src[y2, x1].astype(np.float) * (float(x2) - ux) * (uy - float(y1))
                 part4 = src[y2, x2].astype(np.float) * \
-                    (ux-float(x1)) * (uy - float(y1))
+                        (ux - float(x1)) * (uy - float(y1))
 
-                insertValue = part1+part2+part3+part4
+                insertValue = part1 + part2 + part3 + part4
 
                 return insertValue.astype(np.int8)
 
@@ -540,12 +541,12 @@ class MyDlib:
 
         # 如果未检测到人脸关键点，就不进行瘦脸
         if len(landmarks) == 0:
-            #raise Exception("No face was been detected!")
+            # raise Exception("No face was been detected!")
             if (self.last_frame.size != 0):
                 frame = self.last_frame
             else:
                 white = np.zeros(
-                    (frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
+                    (image.shape[0], image.shape[1], 3), dtype=np.uint8)
                 white.fill(255)
                 frame = white
             return frame
@@ -560,12 +561,15 @@ class MyDlib:
             endPt = landmarks_node[30]
 
             # 计算第4个点到第6个点的距离作为瘦脸距离
-            r_left = math.sqrt((left_landmark[0, 0]-left_landmark_down[0, 0])*(left_landmark[0, 0]-left_landmark_down[0, 0]) +
-                               (left_landmark[0, 1] - left_landmark_down[0, 1]) * (left_landmark[0, 1] - left_landmark_down[0, 1]))
+            r_left = math.sqrt(
+                (left_landmark[0, 0] - left_landmark_down[0, 0]) * (left_landmark[0, 0] - left_landmark_down[0, 0]) +
+                (left_landmark[0, 1] - left_landmark_down[0, 1]) * (left_landmark[0, 1] - left_landmark_down[0, 1]))
 
             # 计算第14个点到第16个点的距离作为瘦脸距离
-            r_right = math.sqrt((right_landmark[0, 0]-right_landmark_down[0, 0])*(right_landmark[0, 0]-right_landmark_down[0, 0]) +
-                                (right_landmark[0, 1] - right_landmark_down[0, 1]) * (right_landmark[0, 1] - right_landmark_down[0, 1]))
+            r_right = math.sqrt((right_landmark[0, 0] - right_landmark_down[0, 0]) * (
+                        right_landmark[0, 0] - right_landmark_down[0, 0]) +
+                                (right_landmark[0, 1] - right_landmark_down[0, 1]) * (
+                                            right_landmark[0, 1] - right_landmark_down[0, 1]))
 
             # 瘦左边脸
             thin_image = localTranslationWarp(
@@ -575,18 +579,14 @@ class MyDlib:
                 thin_image, right_landmark[0, 0], right_landmark[0, 1], endPt[0, 0], endPt[0, 1], r_right)
 
         # 显示
-        #cv2.imshow('original', src)
-        #cv2.imshow('thin', thin_image)
+        # cv2.imshow('original', src)
+        # cv2.imshow('thin', thin_image)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
         return thin_image
 
 
-if (TENSORFLOW2):
-    my_deeplab = MyDeepLab()
-else:
-    MaskRCNN_model = _init_MASK_RCNN_model()
-
+my_deeplab = MyDeepLab()
 Whitening_model = _init_Whitening_model()
 
 my_dlib = MyDlib()
@@ -644,7 +644,7 @@ def display(*frames):
 
     fig = plt.figure()
     for n, (image, title) in enumerate(zip(images, titles)):
-        a = fig.add_subplot(cols, np.ceil(n_images/float(cols)), n + 1)
+        a = fig.add_subplot(cols, np.ceil(n_images / float(cols)), n + 1)
         if image.ndim == 2:
             plt.gray()
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -669,49 +669,17 @@ def save_a_frame_as_an_image(path_of_image, frame):
 
 
 def get_masked_image(frame, mask):
-    image = frame*mask
+    image = frame * mask
     return image
 
 
 def get_human_and_background_masks_from_a_frame(frame):
-    if (TENSORFLOW2):
-        results = my_deeplab.predict(frame)
-        results = my_deeplab.get_human_mask(results)
-        if (results.size == 0):
-            return None, None
-        else:
-            return results, np.logical_not(results)
-    else:
-        results = MaskRCNN_model.detect([frame], verbose=0)
-        r = results[0]
-
-        # print(r['class_ids'])
-        if (_class_names.index("person") in r['class_ids']):
-            a_tuple = np.where(r['class_ids'] == _class_names.index("person"))
-            index_array = a_tuple[0]
-
-            # print(r['masks'].shape) # The shape is strange, you should see function display_instances() in visualize.py for more details
-            if len(index_array) > 0:
-                logging.debug(f"index_array shape: {index_array}")
-                shape = r['masks'][:, :, [0]].shape
-                logging.debug(f"original frame shape: {shape}")
-                final_mask1 = np.zeros((shape[0], shape[1], 1), dtype=np.uint8)
-                logging.debug(f"final_mask1 size: {final_mask1.shape}")
-                for index in index_array:
-                    mask = r['masks'][:, :, [index]]
-                    logging.debug(f"single mask after use index: {mask.shape}")
-
-                    # non black pixel, human shape
-                    mask1 = (mask == True).astype(np.uint8)
-                    # mask2 = (mask == False).astype(np.uint8)  # black pixel, non-human shape
-
-                    logging.debug(f"mask1.shape: {mask1.shape}")
-                    final_mask1 = np.logical_or(final_mask1, mask1)
-
-                logging.debug(f"final_mask1 size: {final_mask1.shape}\n")
-                return final_mask1, np.logical_not(final_mask1)
-
+    results = my_deeplab.predict(frame)
+    results = my_deeplab.get_human_mask(results)
+    if (results.size == 0):
         return None, None
+    else:
+        return results, np.logical_not(results)
 
 
 def stylize_background(frame, stylize_function_list=None):
@@ -735,7 +703,7 @@ def stylize_background(frame, stylize_function_list=None):
 
 def stylize_human_body(frame, stylize_function_list=None):
     if stylize_function_list == None:
-        stylize_function_list = [effect_of_blur_for_face]
+        stylize_function_list = [effect_of_blur_for_skin]
 
     person_mask, background_mask = get_human_and_background_masks_from_a_frame(
         frame)
@@ -753,11 +721,12 @@ def stylize_human_body(frame, stylize_function_list=None):
         return frame
 
 
-def stylize_background_and_human_body(frame, background_stylize_function_list=None, human_body_stylize_function_list=None):
+def stylize_background_and_human_body(frame, background_stylize_function_list=None,
+                                      human_body_stylize_function_list=None):
     if background_stylize_function_list == None:
         background_stylize_function_list = [effect_of_blur]
     if human_body_stylize_function_list == None:
-        human_body_stylize_function_list = [effect_of_blur_for_face]
+        human_body_stylize_function_list = [effect_of_blur_for_skin]
 
     stylized_background = frame
     for stylize_function in background_stylize_function_list:
@@ -809,7 +778,7 @@ def effect_of_blur(frame, kernel=None, method=1):
 
 
 def effect_of_blur_for_skin(frame, kernel=9):
-    return cv2.bilateralFilter(frame, kernel, kernel*2, kernel/2)
+    return cv2.bilateralFilter(frame, kernel, kernel * 2, kernel / 2)
 
 
 def effect_of_whitening(frame, whiten_level=5.0, target_mask=None):
@@ -818,7 +787,7 @@ def effect_of_whitening(frame, whiten_level=5.0, target_mask=None):
     magic_number = 0.003921
     a = math.log(whiten_level)
     new_frame = (255 * (np.log((frame * magic_number) *
-                               (whiten_level-1) + 1) / a)).astype(np.uint8)
+                               (whiten_level - 1) + 1) / a)).astype(np.uint8)
 
     """
     height, width, _ = frame.shape
@@ -874,7 +843,7 @@ def effect_of_whitening_with_neural_network(frame, target_mask=None):
 def effect_of_whitening_with_a_top_layer(frame, target_mask=None):
     white = effect_of_pure_white(frame)
     frame = cv2.addWeighted(white, 0.2, frame, 0.85, 0)
-    #frame = cv2.addWeighted(white, 0.1, frame, 0.9, 0)
+    # frame = cv2.addWeighted(white, 0.1, frame, 0.9, 0)
     if isinstance(target_mask, np.ndarray):
         return get_masked_image(frame, target_mask)
     else:
@@ -992,7 +961,7 @@ def process_camera(device=0, effect_function=None, show=True):
 
     cap = cv2.VideoCapture(device)
 
-    while(True):
+    while (True):
         ret, frame = cap.read()
         frame = effect_function(frame)
 
