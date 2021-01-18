@@ -1,3 +1,4 @@
+"""
 from ._main import (
     terminal,
     read_image_as_a_frame,
@@ -33,6 +34,7 @@ try:
     from ._main import MyDlib
 except Exception as e:
     print(e)
+"""
 
 
-#from ._main import *
+from ._main import *

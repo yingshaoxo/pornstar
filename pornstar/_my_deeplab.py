@@ -15,6 +15,7 @@ https://github.com/JonathanCMitchell/mobilenet_v2_keras
     (https://arxiv.org/abs/1610.02357)
 - [Inverted Residuals and Linear Bottlenecks: Mobile Networks for
     Classification, Detection and Segmentation](https://arxiv.org/abs/1801.04381)
+    
 """
 
 from __future__ import absolute_import
@@ -41,7 +42,6 @@ from tensorflow.python.keras.utils.data_utils import get_file
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.activations import relu
 from tensorflow.python.keras.applications.imagenet_utils import preprocess_input
-
 
 WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
 WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
@@ -480,6 +480,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
         model.load_weights(weights_path, by_name=True)
     return model
 
+
 def preprocess_input(x):
     """Preprocesses a numpy array encoding a batch of images.
     # Arguments
@@ -488,3 +489,82 @@ def preprocess_input(x):
         Input array scaled to [-1.,1.]
     """
     return preprocess_input(x, mode='tf')
+
+
+# ggggggggggggggggggggggggggggoooooooooooooooooooo
+"""
+Life won't end if you persistent
+"""
+
+from PIL import Image
+import numpy as np
+import cv2
+
+
+class MyDeepLab():
+    label_names = np.asarray([
+        'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
+        'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike',
+        'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tv'
+    ])
+    model = Deeplabv3(backbone='xception', OS=16)
+
+    def predict(self, image):
+        # image = np.array(Image.open(image_path)
+
+        # Generates labels using most basic setup.  Supports various image sizes.  Returns image labels in same format
+        # as original image.  Normalization matches MobileNetV2
+        trained_image_width = 512
+        mean_subtraction_value = 127.5
+
+        # resize to max dimension of images from training dataset
+        w, h, _ = image.shape
+        ratio = float(trained_image_width) / np.max([w, h])
+        resized_image = np.array(Image.fromarray(image.astype(
+            'uint8')).resize((int(ratio * h), int(ratio * w))))
+
+        # apply normalization for trained dataset images
+        resized_image = (resized_image / mean_subtraction_value) - 1.
+
+        # pad array to square image to match training imagessqueeze()
+        pad_x = int(trained_image_width - resized_image.shape[0])
+        pad_y = int(trained_image_width - resized_image.shape[1])
+        resized_image = np.pad(
+            resized_image, ((0, pad_x), (0, pad_y), (0, 0)), mode='constant')
+
+        # do prediction
+        res = self.model.predict(np.expand_dims(resized_image, 0))
+        labels = np.argmax(res.squeeze(), -1)
+
+        # remove padding and resize back to original image
+        if pad_x > 0:
+            labels = labels[:-pad_x]
+        if pad_y > 0:
+            labels = labels[:, :-pad_y]
+        labels = np.array(Image.fromarray(
+            labels.astype('uint8')).resize((h, w)))
+
+        return labels
+
+    def get_human_mask(self, labels):
+        human_index = np.where(self.label_names == "person")[0]
+        if (human_index.size == 0):
+            return np.array([])
+        else:
+            human_index = human_index[0]
+            human_values = (labels == human_index).astype(np.uint8)
+            return np.expand_dims(human_values, axis=2)
+
+    def scale_up_mask(self, mask, factor=1.5):
+        if factor < 1:
+            return mask
+
+        old_width, old_height, _ = mask.shape
+        x = int(((factor - 1) * old_width) / 2)
+        y = int(((factor - 1) * old_height) / 2)
+
+        resized_mask = cv2.resize(mask, (0, 0), fx=factor, fy=factor)
+        resized_mask = np.expand_dims(resized_mask, axis=2)
+        cropped_mask = resized_mask[x:x + old_width, y:y + old_height].copy()
+
+        return cropped_mask
