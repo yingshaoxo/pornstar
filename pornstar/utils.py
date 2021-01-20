@@ -1,6 +1,8 @@
 from moviepy.editor import VideoFileClip
 import os
 from auto_everything.terminal import Terminal
+from auto_everything.disk import Disk
+from auto_everything.network import Network
 import logging
 
 from PIL import Image
@@ -11,6 +13,8 @@ import numpy as np
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 
 terminal = Terminal()
+disk = Disk()
+network = Network()
 
 # Static directory of this module
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")

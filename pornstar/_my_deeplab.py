@@ -507,7 +507,8 @@ class MyDeepLab():
         'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike',
         'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tv'
     ])
-    model = Deeplabv3(backbone='xception', OS=16)
+    #model = Deeplabv3(backbone='xception', OS=16)
+    model = Deeplabv3(backbone='mobilenetv2', OS=16)
 
     def predict(self, image):
         # image = np.array(Image.open(image_path)
