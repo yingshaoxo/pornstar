@@ -160,11 +160,18 @@ boxes:  [[[0.55928797 0.39158955 0.59213775 0.41065833]
 
 class MyObjectDetector():
     def __init__(self):
-        #localModelFolder = os.path.join(utils.ROOT_DIR, "objectDetector")
-        #if not utils.disk.exists(localModelFolder):
-        #    utils.network.download()
-        module_handle = "https://tfhub.dev/tensorflow/ssd_mobilenet_v2/2"  # @param ["https://tfhub.dev/google/openimages_v4/ssd/mobilenet_v2/1", "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1"]
-        self.detector = hub.load(module_handle)  # .signatures['default']
+        url = "https://github.com/yingshaoxo/pornstar/raw/master/models/ssd_mobilenet_v2_2.tar.gz"
+        compressedFile = os.path.join(utils.ROOT_DIR, "ssd_mobilenet_v2_2.tar.gz")
+        if not utils.disk.exists(compressedFile):
+            print("downloading...")
+            utils.network.download(url, compressedFile)
+        localModelFolder = os.path.join(utils.ROOT_DIR, "objectDetector")
+        modelPath = os.path.join(localModelFolder, "saved_model.pb")
+        if not utils.disk.exists(modelPath):
+            utils.disk.uncompress(compressedFile, localModelFolder)
+        #module_handle = "https://tfhub.dev/tensorflow/ssd_mobilenet_v2/2"  # @param ["https://tfhub.dev/google/openimages_v4/ssd/mobilenet_v2/1", "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1"]
+        #self.detector = hub.load(module_handle)  # .signatures['default']
+        self.detector = hub.load(localModelFolder)  # .signatures['default']
 
     def load_img_from_url(self, path):
         img = tf.io.read_file(path)
