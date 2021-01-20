@@ -95,3 +95,6 @@ def oil_painting(img, brush_size, roughness):
                 int(A[max_idx] / max_ins_count)
 
     return dst_img
+
+
+print("_PIL_filters.py was loaded.")

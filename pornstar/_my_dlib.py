@@ -8,7 +8,7 @@ from PIL import Image
 import cv2
 import math
 
-from .utils import ROOT_DIR, STATIC_DIR
+from . import  utils
 
 DLIB_USE_CNN = False
 try:
@@ -26,7 +26,7 @@ class MyDlib:
 
         if DLIB_USE_CNN:
             dlib_cnn_face_detector_path = os.path.join(
-                ROOT_DIR, "mmod_human_face_detector.dat")
+                utils.ROOT_DIR, "mmod_human_face_detector.dat")
             if not os.path.exists(dlib_cnn_face_detector_path):
                 self.download_cnn_face_detector(dlib_cnn_face_detector_path)
             self.face_detector = dlib.cnn_face_detection_model_v1(dlib_cnn_face_detector_path)
@@ -34,7 +34,7 @@ class MyDlib:
             self.face_detector = dlib.get_frontal_face_detector()
 
         dlib_shape_predictor_path = os.path.join(
-            ROOT_DIR, "shape_predictor_68_face_landmarks.dat")
+            utils.ROOT_DIR, "shape_predictor_68_face_landmarks.dat")
         if not os.path.exists(dlib_shape_predictor_path):
             self.download_dlib_shape_predictor(dlib_shape_predictor_path)
         self.face_predictor = dlib.shape_predictor(

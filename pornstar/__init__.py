@@ -1,5 +1,11 @@
+from ._main import *
+from . import face
+from . import utils
+
+print("__init__.py was loaded.")
+
 """
-from ._main import (
+__all__ = [
     terminal,
     read_image_as_a_frame,
     combine_two_frame,
@@ -23,18 +29,5 @@ from ._main import (
     effect_of_face_slimming,
     process_video,
     process_camera,
-)
-
-try:
-    from ._main import MyDeepLab
-except Exception as e:
-    print(e)
-
-try:
-    from ._main import MyDlib
-except Exception as e:
-    print(e)
+]
 """
-
-
-from ._main import *
