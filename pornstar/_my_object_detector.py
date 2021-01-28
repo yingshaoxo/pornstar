@@ -169,8 +169,8 @@ class MyObjectDetector():
         modelPath = os.path.join(localModelFolder, "saved_model.pb")
         if not utils.disk.exists(modelPath):
             utils.disk.uncompress(compressedFile, localModelFolder)
-        #module_handle = "https://tfhub.dev/tensorflow/ssd_mobilenet_v2/2"  # @param ["https://tfhub.dev/google/openimages_v4/ssd/mobilenet_v2/1", "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1"]
-        #self.detector = hub.load(module_handle)  # .signatures['default']
+        # module_handle = "https://tfhub.dev/tensorflow/ssd_mobilenet_v2/2"  # @param ["https://tfhub.dev/google/openimages_v4/ssd/mobilenet_v2/1", "https://tfhub.dev/google/faster_rcnn/openimages_v4/inception_resnet_v2/1"]
+        # self.detector = hub.load(module_handle)  # .signatures['default']
         self.detector = hub.load(localModelFolder)  # .signatures['default']
 
     def load_img_from_url(self, path):
@@ -196,6 +196,20 @@ class MyObjectDetector():
             result["detection_classes"], result["detection_scores"])
 
         utils.display(image_with_boxes)
+
+    def detectAndReturnImage(self, image):
+        img = self.load_img(image)
+
+        converted_img = tf.image.convert_image_dtype(img, tf.uint8)[tf.newaxis, ...]
+        result = self.detector(converted_img)
+
+        result = {key: value.numpy() for key, value in result.items()}
+
+        image_with_boxes = draw_boxes(
+            img.numpy(), result["detection_boxes"],
+            result["detection_classes"], result["detection_scores"])
+
+        return image_with_boxes
 
     def detect(self, image, min_score=0.3):
         img = self.load_img(image)
