@@ -1,5 +1,5 @@
 #! python
-#https://github.com/GantMan/nsfw_model
+# https://github.com/GantMan/nsfw_model
 
 import argparse
 import json
@@ -13,46 +13,16 @@ from tensorflow import keras
 import tensorflow_hub as hub
 
 from . import utils
+from auto_everything.disk import Disk
 
+disk = Disk()
 
 IMAGE_DIM = 224  # required/default image dimensionality
 
 
-def load_images(image_paths, image_size, verbose=True):
-    '''
-    Function for loading images into numpy arrays for passing to model.predict
-    inputs:
-        image_paths: list of image paths to load
-        image_size: size into which images should be resized
-        verbose: show all of the image path and sizes loaded
-    
-    outputs:
-        loaded_images: loaded images on which keras model can run predictions
-        loaded_image_indexes: paths of images which the function is able to process
-    
-    '''
+def load_images_from_arrays(image_paths, image_size, verbose=True):
     loaded_images = []
     loaded_image_paths = []
-
-    if isdir(image_paths):
-        parent = abspath(image_paths)
-        image_paths = [join(parent, f) for f in listdir(image_paths) if isfile(join(parent, f))]
-    elif isfile(image_paths):
-        image_paths = [image_paths]
-
-    for img_path in image_paths:
-        try:
-            if verbose:
-                print(img_path, "size:", image_size)
-            image = keras.preprocessing.image.load_img(img_path, target_size=image_size)
-            image = keras.preprocessing.image.img_to_array(image)
-            image /= 255
-            loaded_images.append(image)
-            loaded_image_paths.append(img_path)
-        except Exception as ex:
-            print("Image Load Failure: ", img_path, ex)
-
-    return np.asarray(loaded_images), loaded_image_paths
 
 
 def load_model(model_path):
@@ -61,27 +31,6 @@ def load_model(model_path):
 
     model = tf.keras.models.load_model(model_path, custom_objects={'KerasLayer': hub.KerasLayer})
     return model
-
-
-def loadNSFWmodel():
-    MODEL_FILE_NAME = "nsfw_detection_model.h5"
-    MODEL_PATH = os.path.join(utils.ROOT_DIR, MODEL_FILE_NAME)
-
-    if not utils.disk.exists(MODEL_PATH):
-        print("downloading...")
-        utils.network.download("https://github.com/yingshaoxo/pornstar/raw/master/models/" + MODEL_FILE_NAME, MODEL_PATH)
-        print(f"{MODEL_FILE_NAME} was downloaded!")
-
-    model = load_model(MODEL_PATH)
-
-    return model
-
-
-def classify(model, input_paths, image_dim=IMAGE_DIM):
-    """ Classify given a model, input paths (could be single string), and image dimensionality...."""
-    images, image_paths = load_images(input_paths, (image_dim, image_dim))
-    probs = classify_nd(model, images)
-    return dict(zip(image_paths, probs))
 
 
 def classify_nd(model, nd_images):
@@ -99,6 +48,44 @@ def classify_nd(model, nd_images):
             single_probs[categories[j]] = float(pred)
         probs.append(single_probs)
     return probs
+
+
+class NSFWDetector():
+    def __init__(self):
+        MODEL_FILE_NAME = "nsfw_detection_model.h5"
+        MODEL_PATH = os.path.join(utils.ROOT_DIR, MODEL_FILE_NAME)
+
+        if not utils.disk.exists(MODEL_PATH):
+            print("downloading...")
+            utils.network.download("https://github.com/yingshaoxo/pornstar/raw/master/models/" + MODEL_FILE_NAME,
+                                   MODEL_PATH)
+            print(f"{MODEL_FILE_NAME} was downloaded!")
+
+        self.model = load_model(MODEL_PATH)
+
+    def detect(self, numpyImage):
+        tempFile = disk.getATempFilePath("temp.jpg")
+        utils.save_a_frame_as_an_image(tempFile, numpyImage)
+        image = keras.preprocessing.image.load_img(tempFile, target_size=(IMAGE_DIM, IMAGE_DIM))
+        image = keras.preprocessing.image.img_to_array(image)
+        image /= 255
+        probs = classify_nd(self.model, np.asarray([image]))
+        os.remove(tempFile)
+        return probs
+        """
+        numpyImage = keras.preprocessing.image.smart_resize(numpyImage, size=(IMAGE_DIM, IMAGE_DIM),
+                                                            interpolation="nearest")
+        numpyImage = numpyImage.astype(np.float)
+        numpyImage /= 255
+        probs = classify_nd(self.model, np.asarray([numpyImage]))
+        """
+
+    def isPorn(self, numpyImage, threshold=0.9):
+        result = self.detect(numpyImage)[0]
+        if result["porn"] > threshold:
+            return True
+        else:
+            return False
 
 
 if __name__ == "__main__":

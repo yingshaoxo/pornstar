@@ -2,7 +2,7 @@ from ._my_deeplab import MyDeepLab
 from ._my_dlib import MyDlib
 from ._my_object_detector import MyObjectDetector
 from ._white_model import loadWhiteningModel
-from ._nsfw_detector import loadNSFWmodel
+from ._nsfw_detector import NSFWDetector
 
 my_deeplab = MyDeepLab()
 print("deeplab loaded")
@@ -16,7 +16,7 @@ print("objectDetector loaded")
 whitening_model = loadWhiteningModel()
 print("whiteningModel loaded")
 
-nsfw_detector = loadNSFWmodel()
+nsfw_detector = NSFWDetector()
 print("nsfw detector loaded")
 
 print("store.py was loaded.")

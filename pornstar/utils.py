@@ -10,6 +10,8 @@ from matplotlib import pyplot as plt
 import cv2
 import numpy as np
 
+from tensorflow import keras
+
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 
 terminal = Terminal()
