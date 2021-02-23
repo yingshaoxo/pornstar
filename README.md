@@ -40,6 +40,10 @@ sudo pip3 install pornstar
 
 
 ### Usage
+#### colab
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yingshaoxo/pornstar/blob/master/example/colab.ipynb)
+
+#### local
 first:
 ```
 export TF_FORCE_GPU_ALLOW_GROWTH=true
