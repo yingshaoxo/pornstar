@@ -18,7 +18,9 @@ https://yingshaoxo.github.io/pornstar
 * face slimming
 * `tensorflow2.0` only
 
+<!--
 ![Feature1](Feature_0.png)
+-->
 
 ![Feature1](Feature_1.png)
 
@@ -31,10 +33,6 @@ https://yingshaoxo.github.io/pornstar
 
 ### Installation
 ```
-sudo pip3 install git+https://github.com/yingshaoxo/pornstar
-
-or 
-
 sudo pip3 install pornstar
 ```
 

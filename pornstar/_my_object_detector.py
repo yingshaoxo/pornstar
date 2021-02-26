@@ -180,6 +180,7 @@ class MyObjectDetector():
 
     def load_img(self, image):
         # image = bgr2rgb(image)
+        image = cv2.resize(image, fx=0.5, fy=0.5)
         image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
         return tf.convert_to_tensor(image, dtype=tf.uint8)
 

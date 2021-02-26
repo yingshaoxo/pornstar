@@ -3,6 +3,7 @@ from ._my_dlib import MyDlib
 from ._my_object_detector import MyObjectDetector
 from ._white_model import loadWhiteningModel
 from ._nsfw_detector import NSFWDetector
+from ._audio_module import AudioClassifier
 
 my_deeplab = MyDeepLab()
 print("deeplab loaded")
