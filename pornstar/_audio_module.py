@@ -9,9 +9,11 @@ import os
 import hashlib
 import datetime
 
-from auto_everything.video import VideoUtils, Video
+from auto_everything.video import VideoUtils, Video, Disk, Terminal
 from auto_everything.disk import Store
 
+terminal = Terminal()
+disk = Disk()
 video = Video()
 videoUtils = VideoUtils()
 
@@ -24,7 +26,8 @@ class AudioClassifier():
         filename = "yamnet_1.tar.gz"
         url = f"https://github.com/yingshaoxo/pornstar/raw/master/models/{filename}"
         compressedFile = os.path.join(utils.ROOT_DIR, filename)
-        if not utils.disk.exists(compressedFile):
+        if not utils.disk.exists(compressedFile) or (disk.get_file_size(compressedFile, "MB") < 5):
+            terminal.run_command(f"rm {compressedFile}")
             print("downloading...")
             utils.network.download(url, compressedFile)
         localModelFolder = os.path.join(utils.ROOT_DIR, "yamnet")
