@@ -7,7 +7,7 @@ file_name = "couple"
 input_img = f"./{file_name}.png"
 output_img = f"~/Desktop/{file_name}.png"
 
-raw = pornstar.read_image_as_a_frame(input_img)
+raw = pornstar.utils.read_image_as_a_frame(input_img)
 
 frame = raw
 
@@ -27,7 +27,7 @@ frame3 = pornstar.stylize_the_whole_image(
             [pornstar.effect_of_whitening_with_neural_network]
         )
 
-pornstar.display(
+pornstar.utils.display(
         ("raw", raw), 
         ("top_layer", frame1), 
         ("traditional algorithm", frame2), 

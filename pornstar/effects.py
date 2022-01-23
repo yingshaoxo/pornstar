@@ -6,7 +6,9 @@ import math
 from ._PIL_filters import oil_painting
 
 from . import  utils
-from .store import whitening_model, my_dlib
+from .store import *
+whitening_model = None
+my_dlib = useMyDlib()
 
 
 def effect_of_blur(frame, kernel=None, method=1):
@@ -45,6 +47,10 @@ def effect_of_whitening(frame, whiten_level=5.0, target_mask=None):
 
 
 def effect_of_whitening_with_neural_network(frame, target_mask=None):
+    global whitening_model
+    if whitening_model is None:
+        whitening_model = useWhiteningModel()
+
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     # cv2 pixel is [b, g, r] by default, we want to give it a reverse first

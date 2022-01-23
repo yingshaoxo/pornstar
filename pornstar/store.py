@@ -1,23 +1,36 @@
-from ._my_deeplab import MyDeepLab
-from ._my_dlib import MyDlib
-from ._my_object_detector import MyObjectDetector
-from ._white_model import loadWhiteningModel
-from ._nsfw_detector import NSFWDetector
-from ._audio_module import AudioClassifier
+def useMyDeepLab():
+    from ._my_deeplab import MyDeepLab
+    my_deeplab = MyDeepLab()
+    print("deeplab loaded")
+    return my_deeplab
 
-my_deeplab = MyDeepLab()
-print("deeplab loaded")
+def useMyDlib():
+    from ._my_dlib import MyDlib
+    my_dlib = MyDlib()
+    print("dlib loaded")
+    return my_dlib
 
-my_dlib = MyDlib()
-print("dlib loaded")
+def useMyObjectDetector():
+    from ._my_object_detector import MyObjectDetector
+    my_object_detector = MyObjectDetector()
+    print("objectDetector loaded")
+    return my_object_detector
 
-my_object_detector = MyObjectDetector()
-print("objectDetector loaded")
+def useWhiteningModel():
+    from ._white_model import useWhiteningModel
+    whitening_model = useWhiteningModel()
+    print("whiteningModel loaded")
+    return whitening_model
 
-whitening_model = loadWhiteningModel()
-print("whiteningModel loaded")
+def useNSFWDetector():
+    from ._nsfw_detector import NSFWDetector
+    nsfw_detector = NSFWDetector()
+    print("nsfwDetector loaded")
+    return nsfw_detector
 
-nsfw_detector = NSFWDetector()
-print("nsfw detector loaded")
+def useAudioClassifier():
+    from ._audio_module import AudioClassifier
+    AudioClassifier = AudioClassifier()
+    return AudioClassifier
 
 print("store.py was loaded.")

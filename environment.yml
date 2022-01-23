@@ -1,0 +1,12 @@
+name: pornstar
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - poetry
+  - tensorflow
+  - cmake
+  - tensorflow-hub
+  - librosa
+  - tensorflow-deps==2.6.0
+prefix: /Users/yingshaoxo/miniforge3/envs/pornstar

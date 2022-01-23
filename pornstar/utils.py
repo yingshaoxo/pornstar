@@ -91,7 +91,7 @@ def display(*frames):
 
     fig = plt.figure()
     for n, (image, title) in enumerate(zip(images, titles)):
-        a = fig.add_subplot(cols, np.ceil(n_images / float(cols)), n + 1)
+        a = fig.add_subplot(cols, int(np.ceil(n_images / float(cols))), n + 1)
         if image.ndim == 2:
             plt.gray()
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)

@@ -6,8 +6,14 @@ from .effects import *
 from .store import *
 from . import utils
 
+my_deeplab = None
+
 
 def get_human_and_background_masks_from_a_frame(frame):
+    global my_deeplab
+    if my_deeplab == None:
+        my_deeplab = useMyDeepLab()
+
     results = my_deeplab.predict(frame)
     results = my_deeplab.get_human_mask(results)
     if (results.size == 0):

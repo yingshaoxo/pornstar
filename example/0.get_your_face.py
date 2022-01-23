@@ -1,5 +1,9 @@
+import sys 
+sys.path.append('..')
+
 import pornstar
-mydlib = pornstar.my_dlib
+
+mydlib = pornstar.useMyDlib()
 
 picture = pornstar.utils.read_image_as_a_frame("./me.jpg")
 head = mydlib.get_face(picture)

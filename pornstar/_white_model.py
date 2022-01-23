@@ -7,7 +7,7 @@ from tensorflow.keras.models import load_model as _keras_load_model
 from .utils import ROOT_DIR, STATIC_DIR
 
 
-def loadWhiteningModel():
+def useWhiteningModel():
     MODEL_FILE_NAME = "pornstar_whitening_model.h5"
     MODEL_PATH = os.path.join(ROOT_DIR, MODEL_FILE_NAME)
 
